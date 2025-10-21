@@ -1,6 +1,6 @@
 # app.py
 # Streamlit app with two pages:
-#  - Introduction: explanatory material about residual calcium & synaptic facilitation
+#  - Introduction: explanatory material with nicely formatted math (LaTeX)
 #  - Simulation: interactive demo of simplified Mongillo et al. model
 #
 # Usage:
@@ -44,7 +44,7 @@ if page == "Introduction":
 - **Traditional view**: WM requires neurons to fire continuously (persistent spiking) to keep the memory alive.
 - **Alternate proposal (this paper)**: Instead of continuous firing, the memory can be stored in the *state of synapses*:
   - When a neuron fires, calcium (Ca²⁺) enters its **presynaptic terminal**.
-  - If several spikes occur, **residual Ca²⁺** accumulates (it doesn't vanish instantly).
+  - If several spikes occur, **residual Ca²⁺** accumulates (it does not vanish instantly).
   - Residual Ca²⁺ **increases release probability** for subsequent spikes → this is called **facilitation**.
   - The synapse’s effective strength is modeled as the product **J_eff = J₀ × u(t) × x(t)**:
     - **u(t)** — utilization (models residual Ca²⁺; increases with spikes, decays slowly),
@@ -60,32 +60,38 @@ if page == "Introduction":
         "That faint vibration is like residual calcium — a short-lived trace that preserves what happened recently."
     )
 
-    st.subheader("Short mathematical summary")
+    st.subheader("Short mathematical summary (LaTeX)")
+    st.markdown("Below are the synaptic state equations (Tsodyks–Markram formalism) and the effective synaptic strength:")
+
+    st.latex(r"""
+    \begin{aligned}
+    \frac{dx}{dt} &= \frac{1 - x}{\tau_D} - u(t)\,x(t)\,\sum_k \delta(t - t_{\text{sp}}^{(k)}) \\
+    \frac{du}{dt} &= \frac{U - u}{\tau_F} + U\,(1 - u(t))\,\sum_k \delta(t - t_{\text{sp}}^{(k)}) \\
+    J_{\mathrm{eff}}(t) &= J_0 \, u(t)\,x(t)
+    \end{aligned}
+    """)
+
     st.markdown(
         """
-The model uses two synaptic variables updated on presynaptic spikes (Tsodyks–Markram formalism):
+**Meaning of symbols**
 
-- Resource (depression):
-    dx/dt = (1 - x) / tau_D  ;  on spike: x -> x * (1 - u)
-- Utilization (facilitation, residual Ca²⁺):
-    du/dt = (U - u) / tau_F  ;  on spike: u -> u + U * (1 - u)
+- $x(t)$: fraction of available presynaptic resources (0 ≤ x ≤ 1).  
+- $u(t)$: utilization (proxy for residual presynaptic Ca²⁺).  
+- $t_{\mathrm{sp}}^{(k)}$: times of presynaptic spikes (k indexes spikes).  
+- $\tau_D$: recovery time constant for depletion (depression).  
+- $\tau_F$: decay time constant for facilitation (residual Ca²⁺).  
+- $U$: facilitation increment per spike (how much $u$ jumps on a spike).  
+- $J_0$: baseline synaptic weight; $J_{\mathrm{eff}}$ is the momentary efficacy.
 
-Effective synaptic strength:
-    J_eff(t) = J0 * u(t) * x(t)
-
-Typical paper values:
-- U ≈ 0.2
-- tau_D ≈ 0.2 s
-- tau_F ≈ 1.0 – 1.5 s
-
-Because tau_F is long, u(t) remains elevated for ~1 s after spikes, allowing activity-silent maintenance.
-        """
+**Typical values (paper / related implementations)**  
+- $U \approx 0.2$  
+- $\tau_D \approx 0.2\ \mathrm{s}$  
+- $\tau_F \approx 1.0$–$1.5\ \mathrm{s}$
+"""
     )
 
     st.subheader("Time-course sketch (conceptual)")
-    st.markdown(
-        "Below is a simple text sketch of calcium and synaptic efficacy after a brief burst of spikes:"
-    )
+    st.markdown("Below is a simple conceptual sketch of what happens after a brief burst of spikes:")
     st.code(
         "time (ms) -> 0       200      400      600      800     1000\n"
         "spikes      :  ████                              \n"
@@ -96,8 +102,7 @@ Because tau_F is long, u(t) remains elevated for ~1 s after spikes, allowing act
     )
 
     st.markdown(
-        "If you want more depth, the **Simulation** page shows a working demonstration of u(t) and x(t) "
-        "and lets you test readout pulses, tau_F, and U to see how long the trace lasts."
+        "If you want more depth, the **Simulation** page shows a working demonstration of $u(t)$ and $x(t)$ and lets you test readout pulses, $\\tau_F$, and $U$ to see how long the trace lasts."
     )
 
     st.info("Tip: switch to **Simulation** in the sidebar to run the interactive demo.")
@@ -113,7 +118,7 @@ else:
         "It uses probabilistic spiking (Poisson-like) and Tsodyks–Markram updates for u and x."
     )
 
-    # Sidebar controls (same controls as before)
+    # Sidebar controls
     st.sidebar.header("Simulation parameters")
 
     T = st.sidebar.slider("Total simulation time (ms)", 500, 8000, 3000, step=100)
