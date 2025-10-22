@@ -13,27 +13,6 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(layout="wide", page_title="Synaptic Facilitation WM Demo")
 
-# Sidebar navigation
-# --- Page selector (add or replace the existing one in your app) ---
-# NOTE: If your app already has a sidebar selectbox controlling pages, replace that selectbox with the snippet below.
-# If you insert this snippet while another selector already exists, remove or adapt the other one to avoid duplicate UI.
-pages = ["Introduction", "Simulation", "Theory"]
-page = st.sidebar.selectbox("Select page", pages)
-
-if page == "Introduction":
-    # if you already have an Introduction function, call it; else we show a placeholder
-    try:
-        introduction_page()   # your existing function (if present)
-    except Exception:
-        st.write("Introduction page placeholder. Replace with your existing content or remove this placeholder.")
-elif page == "Simulation":
-    try:
-        simulation_page()  # your existing simulation function
-    except Exception:
-        st.write("Simulation page placeholder. Replace with your existing content or remove this placeholder.")
-elif page == "Theory":
-    theory_page()
-
 # ----------------------------
 # Introduction page (explanatory)
 # ----------------------------
@@ -368,3 +347,24 @@ else:
         b64 = base64.b64encode(bio.read()).decode()
         href = f'<a href="data:application/octet-stream;base64,{b64}" download="synfac_sim.npz">Download simulation .npz</a>'
         st.markdown(href, unsafe_allow_html=True)
+
+# ---------- Page selector (place this AFTER your page function definitions) ----------
+pages = ["Introduction", "Simulation", "Theory"]
+page = st.sidebar.selectbox("Select page", pages)
+
+if page == "Introduction":
+    try:
+        introduction_page()   # call existing function if defined
+    except NameError:
+        st.error("Introduction page is not defined. Please implement `introduction_page()` or update the selector.")
+elif page == "Simulation":
+    try:
+        simulation_page()
+    except NameError:
+        st.error("Simulation page is not defined. Please implement `simulation_page()` or update the selector.")
+elif page == "Theory":
+    try:
+        theory_page()
+    except NameError:
+        st.error("Theory page is not defined. Please implement `theory_page()` or update the selector.")
+# -------------------------------------------------------------------------------
