@@ -219,52 +219,64 @@ def simulation_page():
         "- Between spikes: u decays to U with tau_f; x recovers to 1 with tau_d."
     )
 
-        # --- Add interpretive restatement of u, x, and J_eff ---
+        # --- Collapsible restatement of u, x, and J_eff ---
     st.header("Restatement of synaptic variables")
 
+    # Summary table always visible
     st.markdown(
         """
-### **u(t)** — Utilization of synaptic efficacy  
-- Fraction of available resources used per presynaptic spike.  
-- Reflects **residual calcium** in the presynaptic terminal:  
-  - Each spike increases `u` (facilitation).  
-  - Between spikes, `u` decays slowly toward baseline `U` with time constant `τ_F ≈ 1.5 s`.  
-- A larger `u` → higher release probability → stronger synaptic effect.  
-**Think:** the synapse’s *gain knob* that turns up with recent activity.
+    | Variable | Biophysical meaning | Dynamics | Functional role |
+    |-----------|---------------------|-----------|-----------------|
+    | **u(t)** | Probability of vesicle release (residual Ca²⁺) | Increases at spikes; decays slowly (τ<sub>F</sub> ≈ 1.5 s) | Short-term **facilitation** |
+    | **x(t)** | Fraction of available vesicles | Decreases at spikes; recovers quickly (τ<sub>D</sub> ≈ 0.2 s) | Short-term **depression** |
+    | **J<sub>eff</sub>(t)** | Effective synaptic efficacy | J₀ · u · x | Net synaptic strength (balance of facilitation & depression) |
+            """,
+            unsafe_allow_html=True,
+        )
 
----
+        # Collapsible detailed explanations
+        with st.expander("Show details — expanded explanation of u(t), x(t), and J_eff"):
+            st.markdown("### **u(t)** — Utilization of synaptic efficacy")
+            st.markdown(
+                """
+    - Fraction of available resources used per presynaptic spike.  
+    - Reflects **residual calcium** in the presynaptic terminal: each spike increases `u` (facilitation), and between spikes `u` decays slowly toward baseline `U` with time constant `τ_F ≈ 1.5 s`.  
+    - A larger `u` → higher release probability → stronger synaptic effect.  
 
-### **x(t)** — Fraction of available synaptic resources  
-- Represents how much neurotransmitter supply (vesicles) remains available.  
-  - Each spike consumes some resources → `x` decreases.  
-  - Between spikes, vesicles are replenished → `x` recovers toward 1 with `τ_D ≈ 0.2 s`.  
-- A smaller `x` → short-term **depression** (temporary weakening).  
-**Think:** the synapse’s *fuel tank* that empties with use and refills over time.
+    **Think:** the synapse’s *gain knob* that turns up with recent activity.
+                """
+            )
 
----
+            st.markdown("### **x(t)** — Fraction of available synaptic resources")
+            st.markdown(
+                """
+    - Represents how much neurotransmitter supply (vesicles) remains available. Each spike consumes some resources → `x` decreases; between spikes, vesicles are replenished and `x` recovers toward 1 with `τ_D ≈ 0.2 s`.  
+    - A smaller `x` → short-term **depression** (temporary weakening).  
 
-### **Jₑₓₑₒₜₑ₋ₓₑ₋ₓₑₓₑ(t) = J₀ · u(t) · x(t)** — Effective synaptic strength  
-- The instantaneous efficacy of the synapse.  
-- Combines the opposite influences of facilitation and depression:  
-  - `u(t)` ↑ strengthens transmission.  
-  - `x(t)` ↓ weakens transmission.  
-- `J₀` sets the baseline coupling strength.  
+    **Think:** the synapse’s *fuel tank* that empties with use and refills over time.
+                """
+            )
 
-**Think:** the synapse’s *actual power output* — the balance between being **primed** (high u) and **depleted** (low x).
-        """
-    )
+            st.markdown("### **J_eff(t) = J₀ · u(t) · x(t)** — Effective synaptic strength")
+            st.markdown(
+                """
+    - The instantaneous efficacy of the synapse — combines facilitation and depression.  
+    - `u(t)` ↑ strengthens transmission while `x(t)` ↓ weakens it; `J₀` sets the baseline coupling strength.  
+    - When `u` increases enough and `x` does not deplete too much, `J_eff` rises (facilitation dominates). If `x` is strongly depleted, `J_eff` falls (depression dominates).  
 
-    # Summary table
-    st.markdown(
-        """
-| Variable | Biophysical meaning | Dynamics | Functional role |
-|-----------|---------------------|-----------|-----------------|
-| **u(t)** | Probability of vesicle release (residual Ca²⁺) | Increases at spikes; decays slowly (τ<sub>F</sub> ≈ 1.5 s) | Short-term **facilitation** |
-| **x(t)** | Fraction of available vesicles | Decreases at spikes; recovers quickly (τ<sub>D</sub> ≈ 0.2 s) | Short-term **depression** |
-| **J<sub>eff</sub>(t)** | Effective synaptic efficacy | J₀ · u · x | Net synaptic strength (balance of facilitation & depression) |
-        """,
-        unsafe_allow_html=True,
-    )
+    **Think:** the synapse’s *actual power output* — the balance between being **primed** (high `u`) and **depleted** (low `x`).
+                """
+            )
+
+            st.markdown("---")
+            st.markdown(
+                """
+    **Quick numeric reminders**  
+    - Typical values used in Mongillo et al. (2008): `τ_D ≈ 0.2 s`, `τ_F ≈ 1.5 s`, `U ≈ 0.2–0.3`.  
+    - `u` changes on the order of seconds (slow decay), allowing an activity-silent trace; `x` changes on the order of hundreds of milliseconds (faster recovery).
+                """
+            )
+
 
 
     # Build populations
