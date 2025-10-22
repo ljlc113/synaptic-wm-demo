@@ -520,7 +520,7 @@ If `u` increases sufficiently and `x` doesn't deplete too much, `J_eff` can incr
     st.markdown("If you want this same explanation added as a static second page (e.g., a printable/markdown page) or integrated into your existing multi-page selector, tell me where your current page selector lives in `app.py` and I will provide a one-line patch you can paste in.")
 
 # ---------- Page selector (place this AFTER your page function definitions) ----------
-pages = ["Introduction", "Simulation", "Theory"]
+pages = ["Introduction", "Theory", "Simulation"]
 page = st.sidebar.selectbox("Select page", pages)
 
 if page == "Introduction":
