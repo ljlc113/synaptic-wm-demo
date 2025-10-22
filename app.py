@@ -215,9 +215,7 @@ def simulation_page():
     st.subheader("Model notes")
     st.markdown(
         """
----
-
-#### **Presynaptic spikes**
+##### **Presynaptic spikes**
 When a presynaptic neuron fires, the synaptic variables update instantly:
         """
     )
@@ -242,7 +240,7 @@ When a presynaptic neuron fires, the synaptic variables update instantly:
         """
 ---
 
-### **Between spikes**
+##### **Between spikes**
 The variables relax continuously toward their baseline values:
         """
     )
@@ -265,7 +263,7 @@ The variables relax continuously toward their baseline values:
         """
 ---
 
-### **Effective synaptic strength**
+##### **Effective synaptic strength**
 The instantaneous connection efficacy is given by:
         """
     )
