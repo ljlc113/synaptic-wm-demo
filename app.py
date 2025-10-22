@@ -84,65 +84,70 @@ process, the memory can be transiently held for about 1 second without enhanced 
 
     import plotly.graph_objects as go
 
-    st.subheader("Interactive conceptual timeline")
+    st.subheader("Interactive conceptual timeline (hover the bars)")
 
     st.markdown(
-        """
-    Hover over each colored region to reveal the annotation text explaining what happens during that time window:
-    - **Encoding** (0–200 ms): the initial spike burst loads the memory.
-    - **Silent Maintenance** (200–800 ms): residual Ca²⁺ silently maintains the memory without spiking.
-    - **Readout / Reactivation** (800–1000 ms): a weak cue reactivates the memory trace.
-    """
+        "Hover anywhere over a colored bar to see the explanation for that phase."
     )
 
-    # Define the key time windows
+    # Define the key time windows (ms)
     phases = [
-        {"start": 0, "end": 200, "label": "Encoding (neurons fire, Ca²⁺ ↑, synapses facilitate)", "color": "rgba(255, 99, 71, 0.5)"},
-        {"start": 200, "end": 800, "label": "Silent Maintenance (no firing, residual Ca²⁺ sustains trace)", "color": "rgba(100, 149, 237, 0.4)"},
-        {"start": 800, "end": 1000, "label": "Readout / Reactivation (weak input triggers recall)", "color": "rgba(60, 179, 113, 0.4)"},
+        {"start": 0, "end": 200, "label": "Encoding — neurons fire; residual Ca²⁺ builds; u ↑; x ↓", "color": "rgba(255,99,71,0.5)"},
+        {"start": 200, "end": 800, "label": "Silent maintenance — little/no spiking; residual Ca²⁺ (u) decays slowly and maintains the trace", "color": "rgba(100,149,237,0.45)"},
+        {"start": 800, "end": 1000, "label": "Readout/Reactivation — brief weak input reactivates the facilitated synapses (recall)", "color": "rgba(60,179,113,0.45)"},
     ]
 
-    # Create figure
     fig = go.Figure()
 
-    # Add invisible line for the timeline axis
+    # Add filled rectangles as polygon scatter traces (one per phase)
+    bar_y_bottom = 0.0
+    bar_y_top = 1.0
+    for phase in phases:
+        x0 = phase["start"]
+        x1 = phase["end"]
+        # polygon corners (closed)
+        xs = [x0, x1, x1, x0, x0]
+        ys = [bar_y_bottom, bar_y_bottom, bar_y_top, bar_y_top, bar_y_bottom]
+        fig.add_trace(go.Scatter(
+            x=xs,
+            y=ys,
+            fill="toself",
+            fillcolor=phase["color"],
+            line=dict(color="rgba(0,0,0,0)"),
+            hoverinfo="text",
+            hovertext=phase["label"],
+            showlegend=False,
+            mode="lines"
+        ))
+
+    # Optional: add a thin central timeline line for aesthetics (no hover)
     fig.add_trace(go.Scatter(
-        x=[0, 1000], y=[0, 0],
+        x=[-50, 1050],
+        y=[0.5, 0.5],
         mode="lines",
-        line=dict(color="rgba(0,0,0,0)"),
+        line=dict(color="rgba(0,0,0,0.25)", width=1),
         hoverinfo="skip",
         showlegend=False
     ))
 
-    # Add transparent scatter regions with hovertext
-    for phase in phases:
-        fig.add_trace(go.Scatter(
-            x=[phase["start"], phase["end"]],
-            y=[0, 0],
-            mode="lines",
-            line=dict(width=40, color=phase["color"]),
-            hoverinfo="text",
-            text=[phase["label"], phase["label"]],
-            showlegend=False
-        ))
+    # Add textual labels above each bar
+    fig.add_annotation(x=(phases[0]["start"]+phases[0]["end"])/2, y=1.08, text="Encoding", showarrow=False, font=dict(color="rgb(150,0,0)"))
+    fig.add_annotation(x=(phases[1]["start"]+phases[1]["end"])/2, y=1.08, text="Silent maintenance", showarrow=False, font=dict(color="rgb(10,55,120)"))
+    fig.add_annotation(x=(phases[2]["start"]+phases[2]["end"])/2, y=1.08, text="Readout", showarrow=False, font=dict(color="rgb(0,120,50)"))
 
-    # Add annotations to label the timeline
-    fig.add_annotation(x=100, y=0.15, text="Encoding", showarrow=False, font=dict(color="red", size=12))
-    fig.add_annotation(x=500, y=0.15, text="Silent Maintenance", showarrow=False, font=dict(color="blue", size=12))
-    fig.add_annotation(x=900, y=0.15, text="Readout", showarrow=False, font=dict(color="green", size=12))
-
-    # Style
+    # Style layout
     fig.update_layout(
         title="Conceptual timeline of facilitation-based working memory",
         xaxis=dict(title="Time (ms)", range=[-50, 1050], showgrid=False),
-        yaxis=dict(showticklabels=False, showgrid=False, zeroline=False),
-        height=250,
-        margin=dict(l=50, r=50, t=50, b=40),
+        yaxis=dict(visible=False, range=[0, 1.2]),
+        height=260,
+        margin=dict(l=40, r=40, t=60, b=40),
         template="plotly_white",
-        hovermode="x unified"
+        hovermode="closest"
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
 
 
     st.subheader("Conceptual sketch (annotated)")
