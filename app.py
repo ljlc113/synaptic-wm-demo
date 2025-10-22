@@ -19,9 +19,16 @@ pages = ["Introduction", "Simulation", "Theory"]
 page = st.sidebar.selectbox("Select page", pages)
 
 if page == "Introduction":
-    introduction_page()   # your existing function (if present)
+    # if you already have an Introduction function, call it; else we show a placeholder
+    try:
+        introduction_page()   # your existing function (if present)
+    except Exception:
+        st.write("Introduction page placeholder. Replace with your existing content or remove this placeholder.")
 elif page == "Simulation":
-    simulation_page()  # your existing simulation function
+    try:
+        simulation_page()  # your existing simulation function
+    except Exception:
+        st.write("Simulation page placeholder. Replace with your existing content or remove this placeholder.")
 elif page == "Theory":
     theory_page()
 
@@ -362,6 +369,9 @@ else:
 
 # ----------------- Begin THEME / THEORY Page Block -----------------
 # Paste this block into app.py (after your imports at the top)
+# If your app already has a page selector in the sidebar, replace it with the "page" selectbox below.
+# Otherwise this will add a new sidebar selector that includes the existing pages "Introduction" and "Simulation".
+#
 # Requires: streamlit, numpy, plotly
 # -----------------------------------------------------------------
 
