@@ -13,25 +13,6 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(layout="wide", page_title="Synaptic Facilitation WM Demo")
 
-# Sidebar navigation
-# --- Page selector (add or replace the existing one in your app) ---
-pages = ["Introduction", "Simulation", "Theory"]
-page = st.sidebar.selectbox("Select page", pages)
-
-if page == "Introduction":
-    # if you already have an Introduction function, call it; else we show a placeholder
-    try:
-        introduction_page()   # your existing function (if present)
-    except Exception:
-        st.write("Introduction page placeholder. Replace with your existing content or remove this placeholder.")
-elif page == "Simulation":
-    try:
-        simulation_page()  # your existing simulation function
-    except Exception:
-        st.write("Simulation page placeholder. Replace with your existing content or remove this placeholder.")
-elif page == "Theory":
-    theory_page()
-
 # ----------------------------
 # Introduction page (explanatory)
 # ----------------------------
@@ -410,6 +391,49 @@ def simulate_u_x(time, spike_times, U=0.3, tau_D=0.2, tau_F=1.5, dt=0.001):
     J_eff = u * x
     return u, x, J_eff
 
+# ----------------- Begin THEME / THEORY Page Block -----------------
+# Paste this block into app.py (after your imports at the top)
+# If your app already has a page selector in the sidebar, replace it with the "page" selectbox below.
+# Otherwise this will add a new sidebar selector that includes the existing pages "Introduction" and "Simulation".
+#
+# Requires: streamlit, numpy, plotly
+# -----------------------------------------------------------------
+
+import streamlit as st
+import numpy as np
+import plotly.graph_objects as go
+
+def simulate_u_x(time, spike_times, U=0.3, tau_D=0.2, tau_F=1.5, dt=0.001):
+    """
+    Simulate u(t) and x(t) using the Mongillo et al. (2008) model.
+    time : 1D array of times (s)
+    spike_times : iterable of spike times (s)
+    Returns u, x, J_eff arrays aligned with time
+    """
+    n = time.size
+    u = np.zeros(n)
+    x = np.zeros(n)
+    u_val = U
+    x_val = 1.0
+    exp_F = np.exp(-dt / tau_F)
+    exp_D = np.exp(-dt / tau_D)
+
+    spike_idx = set(int(np.round(t / dt)) for t in spike_times if t >= time[0] and t <= time[-1])
+    for i, t in enumerate(time):
+        if i in spike_idx:
+            # spike occurs
+            u_val = u_val + U * (1.0 - u_val)
+            x_val = x_val * (1.0 - u_val)
+        # store
+        u[i] = u_val
+        x[i] = x_val
+        # relax between spikes
+        u_val = U + (u_val - U) * exp_F
+        x_val = 1.0 - (1.0 - x_val) * exp_D
+
+    J_eff = u * x
+    return u, x, J_eff
+
 def theory_page():
     st.title("Theory: Synaptic Facilitation & Network Architecture")
 
@@ -531,5 +555,25 @@ If `u` increases sufficiently and `x` doesn't deplete too much, `J_eff` can incr
 
     st.markdown("---")
     st.markdown("If you want this same explanation added as a static second page (e.g., a printable/markdown page) or integrated into your existing multi-page selector, tell me where your current page selector lives in `app.py` and I will provide a one-line patch you can paste in.")
+
+# --- Page selector (add or replace the existing one in your app) ---
+# NOTE: If your app already has a sidebar selectbox controlling pages, replace that selectbox with the snippet below.
+# If you insert this snippet while another selector already exists, remove or adapt the other one to avoid duplicate UI.
+pages = ["Introduction", "Simulation", "Theory"]
+page = st.sidebar.selectbox("Select page", pages)
+
+if page == "Introduction":
+    # if you already have an Introduction function, call it; else we show a placeholder
+    try:
+        introduction_page()   # your existing function (if present)
+    except Exception:
+        st.write("Introduction page placeholder. Replace with your existing content or remove this placeholder.")
+elif page == "Simulation":
+    try:
+        simulation_page()  # your existing simulation function
+    except Exception:
+        st.write("Simulation page placeholder. Replace with your existing content or remove this placeholder.")
+elif page == "Theory":
+    theory_page()
 
 # ----------------- End THEME / THEORY Page Block -----------------
