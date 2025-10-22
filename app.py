@@ -29,48 +29,39 @@ if page == "Introduction":
 
     st.header("Sentence we are explaining")
 
+    # nicely wrapped text block quote
     st.markdown(
         """
-    > *“We therefore propose that an item is maintained in the WM state by short-term synaptic facilitation
-    mediated by increased residual calcium levels at the presynaptic terminals of the neurons that code
-    for this item. Because removal of residual calcium from presynaptic terminals is a relatively slow
-    process, the memory can be transiently held for about 1 second without enhanced spiking activity.”*
-    """,
-        unsafe_allow_html=False,
+> *“We therefore propose that an item is maintained in the WM state by short-term synaptic facilitation
+mediated by increased residual calcium levels at the presynaptic terminals of the neurons that code
+for this item. Because removal of residual calcium from presynaptic terminals is a relatively slow
+process, the memory can be transiently held for about 1 second without enhanced spiking activity.”*
+"""
     )
-
 
     st.subheader("Plain-language unpacking (step by step)")
     st.markdown(
         """
-- **Working memory (WM)**: holding information for a short time (seconds) — e.g., remembering a phone number briefly.
-- **Traditional view**: WM requires neurons to fire continuously (persistent spiking) to keep the memory alive.
-- **Alternate proposal (this paper)**: Instead of continuous firing, the memory can be stored in the *state of synapses*:
-  - When a neuron fires, calcium (Ca²⁺) enters its **presynaptic terminal**.
-  - If several spikes occur, **residual Ca²⁺** accumulates (it does not vanish instantly).
-  - Residual Ca²⁺ **increases release probability** for subsequent spikes → this is called **facilitation**.
-  - The synapse’s effective strength is modeled as the product **J_eff = J₀ × u(t) × x(t)**:
-    - **u(t)** — utilization (models residual Ca²⁺; increases with spikes, decays slowly),
-    - **x(t)** — available resources (vesicle pool; decreases with spikes, recovers faster).
-- Because **u(t)** decays slowly (time constant ~ 1 s), the synapse remains *primed* for about a second even if the neuron stops firing.
-- A brief, weak input later can selectively re-activate the same neurons because their synapses are still facilitated — the memory is thus stored “silently” in synaptic state.
-        """
-    )
-
-    st.subheader("Simple analogy")
-    st.markdown(
-        "- Imagine plucking a piano string: after you stop plucking, the string vibrates faintly for a short while. "
-        "That faint vibration is like residual calcium — a short-lived trace that preserves what happened recently."
+- **Working memory (WM)**: holding information for a short time (seconds) — e.g., remembering a phone number briefly.  
+- **Traditional view**: WM requires neurons to fire continuously (persistent spiking) to keep the memory alive.  
+- **Alternate proposal (this paper)**: Instead of continuous firing, the memory can be stored in the *state of synapses*:  
+  - When a neuron fires, calcium (Ca²⁺) enters its **presynaptic terminal**.  
+  - If several spikes occur, **residual Ca²⁺** accumulates (it does not vanish instantly).  
+  - Residual Ca²⁺ **increases release probability** for subsequent spikes → this is called **facilitation**.  
+  - The synapse’s effective strength is modeled as **J_eff = J₀ × u(t) × x(t)**, where  
+    - **u(t)** — utilization (models residual Ca²⁺; increases with spikes, decays slowly),  
+    - **x(t)** — available resources (vesicle pool; decreases with spikes, recovers faster).  
+- Because **u(t)** decays slowly (~1 s), the synapse remains *primed* even if the neuron stops firing.  
+- A weak later input can selectively re-activate the same neurons — the memory is thus stored “silently” in synaptic state.  
+"""
     )
 
     st.subheader("Short mathematical summary (LaTeX)")
-    st.markdown("Below are the synaptic state equations (Tsodyks–Markram formalism) and the effective synaptic strength:")
-
     st.latex(r"""
     \begin{aligned}
     \frac{dx}{dt} &= \frac{1 - x}{\tau_D} - u(t)\,x(t)\,\sum_k \delta(t - t_{\text{sp}}^{(k)}) \\
-    \frac{du}{dt} &= \frac{U - u}{\tau_F} + U\,(1 - u(t))\,\sum_k \delta(t - t_{\text{sp}}^{(k)}) \\
-    J_{\mathrm{eff}}(t) &= J_0 \, u(t)\,x(t)
+    \frac{du}{dt} &= \frac{U - u}{\tau_F} + U(1 - u(t))\,\sum_k \delta(t - t_{\text{sp}}^{(k)}) \\
+    J_{\text{eff}}(t) &= J_0 \, u(t)\,x(t)
     \end{aligned}
     """)
 
@@ -78,23 +69,18 @@ if page == "Introduction":
         """
 **Meaning of symbols**
 
-- $x(t)$: fraction of available presynaptic resources (0 ≤ x ≤ 1).  
-- $u(t)$: utilization (proxy for residual presynaptic Ca²⁺).  
-- $t_{\mathrm{sp}}^{(k)}$: times of presynaptic spikes (k indexes spikes).  
-- $\tau_D$: recovery time constant for depletion (depression).  
-- $\tau_F$: decay time constant for facilitation (residual Ca²⁺).  
-- $U$: facilitation increment per spike (how much $u$ jumps on a spike).  
-- $J_0$: baseline synaptic weight; $J_{\mathrm{eff}}$ is the momentary efficacy.
-
-**Typical values (paper / related implementations)**  
-- $U \approx 0.2$  
-- $\tau_D \approx 0.2\ \mathrm{s}$  
-- $\tau_F \approx 1.0$–$1.5\ \mathrm{s}$
+- $x(t)$: fraction of available presynaptic resources (0 ≤ x ≤ 1)  
+- $u(t)$: utilization (proxy for residual presynaptic Ca²⁺)  
+- $t_{sp}^{(k)}$: presynaptic spike times  
+- $\tau_D$: recovery time constant for depression  
+- $\tau_F$: decay time constant for facilitation  
+- $U$: facilitation increment per spike  
+- $J_0$: baseline synaptic weight  
+- $J_{eff}$: effective momentary synaptic efficacy  
 """
     )
 
-    st.subheader("Time-course sketch (conceptual)")
-    st.markdown("Below is a simple conceptual sketch of what happens after a brief burst of spikes:")
+    st.subheader("Conceptual sketch")
     st.code(
         "time (ms) -> 0       200      400      600      800     1000\n"
         "spikes      :  ████                              \n"
@@ -104,11 +90,45 @@ if page == "Introduction":
         language="text",
     )
 
+    # ---------- NEW SECTIONS (tables) ----------
+    st.header("Implications & Advantages")
     st.markdown(
-        "If you want more depth, the **Simulation** page shows a working demonstration of $u(t)$ and $x(t)$ and lets you test readout pulses, $\\tau_F$, and $U$ to see how long the trace lasts."
+        """
+| **Aspect** | **Explanation** |
+|-------------|----------------|
+| **Metabolic efficiency** | Memory maintenance does not require continuous spiking, saving energy compared to persistent-activity models. |
+| **Robustness** | Because the facilitation variable $u(t)$ decays slowly, memories are less vulnerable to brief interruptions in firing. |
+| **Flexible duration** | The decay rate of residual calcium (τₓ₍ₓ₎) can tune how long memory lasts (~1 s or longer). |
+| **Compatibility** | Works alongside traditional persistent-activity mechanisms — not mutually exclusive. |
+"""
     )
 
-    st.info("Tip: switch to **Simulation** in the sidebar to run the interactive demo.")
+    st.header("Limitations / Considerations")
+    st.markdown(
+        """
+| **Limitation** | **Description** |
+|----------------|----------------|
+| **Simplified scope** | Original model mainly demonstrates a single-item memory; capacity for multiple items not fully explored. |
+| **Indirect evidence** | Experimental proof that residual Ca²⁺ alone underlies WM is limited; evidence remains partly inferential. |
+| **Parameter sensitivity** | Memory duration depends on τₓ₍ₓ₎ and Ca²⁺ kinetics; small biological variability may alter stability. |
+| **Hybrid systems likely** | Real cortex probably combines synaptic traces and persistent firing rather than using one mechanism exclusively. |
+"""
+    )
+
+    st.header("Why This Is Important")
+    st.markdown(
+        """
+| **Reason** | **Impact** |
+|-------------|------------|
+| **Expands working-memory theory** | Moves beyond spiking-only frameworks to include synaptic state as a memory substrate. |
+| **Biophysical realism** | Incorporates experimentally observed short-term facilitation phenomena into cognitive modeling. |
+| **Bridges timescales** | Links fast neural spiking (ms) to slower cognitive timescales (s) via synaptic time constants. |
+| **Energy-efficient computation** | Suggests the brain may maintain information using low-energy synaptic states rather than constant firing. |
+"""
+    )
+
+    st.info("Tip: switch to **Simulation** in the sidebar to run the interactive demo and visualize facilitation and recovery dynamics.")
+
 
 # ----------------------------
 # Simulation page (interactive)
