@@ -86,25 +86,53 @@ process, the memory can be transiently held for about 1 second without enhanced 
 
     st.subheader("Interactive conceptual timeline (hover the bars)")
 
-    st.markdown("Hover anywhere over a colored bar to see the explanation for that phase.")
+    st.markdown("Hover anywhere over a colored bar to see a detailed annotation for that phase.")
 
-    # Define the key time windows (ms)
+    # Define phases and the multi-line hover text (HTML-friendly)
     phases = [
-        {"start": 0, "end": 200, "label": "Encoding — neurons fire; residual Ca²⁺ builds; u ↑; x ↓", "color": "rgba(255,99,71,0.5)"},
-        {"start": 200, "end": 800, "label": "Silent maintenance — little/no spiking; residual Ca²⁺ (u) decays slowly and maintains the trace", "color": "rgba(100,149,237,0.45)"},
-        {"start": 800, "end": 1000, "label": "Readout/Reactivation — brief weak input reactivates the facilitated synapses (recall)", "color": "rgba(60,179,113,0.45)"},
+        {
+            "start": 0,
+            "end": 200,
+            "label": (
+                "<b>Encoding (0–~200 ms)</b> — A strong, brief burst (████) of spikes drives the target neurons.<br>"
+                "- Presynaptic calcium quickly accumulates → <code>u(t)</code> jumps up (see the <code>u</code> curve rising).<br>"
+                "- Vesicle resources <code>x(t)</code> are consumed (sharp dip).<br>"
+                "- <code>J_eff = J_0 * u * x</code> transiently increases because <code>u</code> increases (even if <code>x</code> dips)."
+            ),
+            "color": "rgba(255,99,71,0.5)",
+        },
+        {
+            "start": 200,
+            "end": 800,
+            "label": (
+                "<b>Silent delay (~200–800 ms)</b> — Spiking drops to baseline or stops.<br>"
+                "- <code>u(t)</code> (residual Ca²⁺) decays slowly and remains <b>elevated</b> for a while (activity-silent trace).<br>"
+                "- <code>x(t)</code> recovers back toward 1 with its own time constant.<br>"
+                "- No persistent firing is needed; the memory is stored in the elevated <code>u(t)</code>."
+            ),
+            "color": "rgba(100,149,237,0.45)",
+        },
+        {
+            "start": 800,
+            "end": 1000,
+            "label": (
+                "<b>Readout / Reactivation (~800–1000 ms)</b> — A weak nonspecific input or brief cue (|) arrives.<br>"
+                "- Because <code>u(t)</code> is still above baseline, the same synapses are <b>more effective</b> and the target neurons preferentially reactivate.<br>"
+                "- This reactivation can refresh <code>u(t)</code> and extend maintenance if needed (periodic reactivations)."
+            ),
+            "color": "rgba(60,179,113,0.45)",
+        },
     ]
 
     fig = go.Figure()
 
-    # Add filled rectangles as polygon scatter traces (one per phase)
+    # Draw each phase as a filled rectangle (polygon) with hovertemplate containing the annotation text.
     bar_y_bottom = 0.0
     bar_y_top = 1.0
     for phase in phases:
         x0 = phase["start"]
         x1 = phase["end"]
-        # polygon corners (closed)
-        xs = [x0, x1, x1, x0, x0]
+        xs = [x0, x1, x1, x0, x0]  # closed polygon
         ys = [bar_y_bottom, bar_y_bottom, bar_y_top, bar_y_top, bar_y_bottom]
         fig.add_trace(go.Scatter(
             x=xs,
@@ -112,13 +140,13 @@ process, the memory can be transiently held for about 1 second without enhanced 
             fill="toself",
             fillcolor=phase["color"],
             line=dict(color="rgba(0,0,0,0)"),
-            hovertemplate=f"{phase['label']}<extra></extra>",
+            hovertemplate=phase["label"] + "<extra></extra>",  # show only the text, suppress extras
             showlegend=False,
             mode="lines",
-            name=""  # empty name avoids default label in hover
+            name=""
         ))
 
-    # Optional: add a thin central timeline line for aesthetics (no hover)
+    # decorative central line (no hover)
     fig.add_trace(go.Scatter(
         x=[-50, 1050],
         y=[0.5, 0.5],
@@ -129,25 +157,25 @@ process, the memory can be transiently held for about 1 second without enhanced 
         name=""
     ))
 
-    # Add textual labels above each bar
+    # labels above bars
     fig.add_annotation(x=(phases[0]["start"]+phases[0]["end"])/2, y=1.08, text="Encoding", showarrow=False, font=dict(color="rgb(150,0,0)"))
-    fig.add_annotation(x=(phases[1]["start"]+phases[1]["end"])/2, y=1.08, text="Silent maintenance", showarrow=False, font=dict(color="rgb(10,55,120)"))
+    fig.add_annotation(x=(phases[1]["start"]+phases[1]["end"])/2, y=1.08, text="Silent delay", showarrow=False, font=dict(color="rgb(10,55,120)"))
     fig.add_annotation(x=(phases[2]["start"]+phases[2]["end"])/2, y=1.08, text="Readout", showarrow=False, font=dict(color="rgb(0,120,50)"))
 
-    # Style layout
     fig.update_layout(
         title="Conceptual timeline of facilitation-based working memory",
         xaxis=dict(title="Time (ms)", range=[-50, 1050], showgrid=False),
         yaxis=dict(visible=False, range=[0, 1.2]),
-        height=260,
-        margin=dict(l=40, r=40, t=60, b=40),
+        height=300,
+        margin=dict(l=40, r=40, t=70, b=40),
         template="plotly_white",
         hovermode="closest"
     )
 
+    # Render
     st.plotly_chart(fig, use_container_width=True)
 
-
+    # Other placeholder section no interactive
     st.subheader("Conceptual sketch (annotated)")
     
     st.markdown("**Key**")
