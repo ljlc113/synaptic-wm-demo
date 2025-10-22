@@ -80,13 +80,74 @@ process, the memory can be transiently held for about 1 second without enhanced 
 """
     )
 
-    # Combined timeline + ASCII sketch (fixed hover formatting and ASCII placement)
+    # Combined timeline with pixel-perfect ASCII sketch image under the bars
+    import io
+    import base64
     import numpy as np
     import plotly.graph_objects as go
 
-    st.subheader("Timeline overlaid on ASCII sketch (hover the bars)")
+    # Pillow imports for rendering ASCII to image
+    from PIL import Image, ImageDraw, ImageFont
 
-    # phases and hover labels (use monospace spans for "code")
+    st.subheader("Timeline with perfectly aligned ASCII sketch (hover the bars)")
+
+    # ---- Configuration ----
+    fig_width_px = 1200   # image width in pixels (controls resolution)
+    fig_height_px = 220   # image height in pixels for the ASCII sketch
+    time_min = 0
+    time_max = 1000
+
+    # The ASCII sketch lines (monospace)
+    ascii_lines = [
+        "time (ms) -> 0       200      400      600      800     1000",
+        "spikes      :  ████     |                       |           ",
+        "             [1]      [2]                     [3]          ",
+        "u (Ca)      :   /‾‾‾‾‾‾‾‾‾‾‾‾‾‾\\_______________________",
+        "x (vesicle) : █‾‾\\_____/\\_____/\\_____/\\__________",
+        "J_eff       :   /‾‾‾\\        (primed for readout)       ",
+    ]
+
+    # Try to load a common monospace font; fall back to PIL default
+    try:
+        # DejaVuSansMono is usually available on many systems
+        font = ImageFont.truetype("DejaVuSansMono.ttf", size=14)
+    except Exception:
+        try:
+            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", size=14)
+        except Exception:
+            font = ImageFont.load_default()
+
+    # Create an image, draw the ASCII lines centered left
+    padding = 12
+    bg_color = (255, 255, 255, 0)  # transparent background recommended
+    img = Image.new("RGBA", (fig_width_px, fig_height_px), (255, 255, 255, 0))
+    draw = ImageDraw.Draw(img)
+
+    # compute starting y to vertically center the ascii block
+    line_height = font.getsize("A")[1] + 2
+    total_text_height = line_height * len(ascii_lines)
+    start_y = (fig_height_px - total_text_height) // 2
+
+    # left margin in pixels
+    left_x = padding
+
+    # Draw lines with monospace font in a dark gray
+    text_color = (50, 50, 50, 255)
+    for i, line in enumerate(ascii_lines):
+        y = start_y + i * line_height
+        draw.text((left_x, y), line, font=font, fill=text_color)
+
+    # Convert PIL image to base64 PNG
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    b64 = base64.b64encode(buf.read()).decode("ascii")
+    img_uri = "data:image/png;base64," + b64
+
+    # ---- Build Plotly figure ----
+    fig = go.Figure()
+
+    # Define phases and hover text
     phases = [
         {
             "start": 0,
@@ -94,9 +155,8 @@ process, the memory can be transiently held for about 1 second without enhanced 
             "label": (
                 "<b>1. Encoding (0–~200 ms)</b><br>"
                 "A strong, brief burst (████) of spikes drives the target neurons.<br>"
-                "- Presynaptic calcium quickly accumulates → "
-                "<span style='font-family:monospace;'>u(t)</span> jumps up (see the u curve rising).<br>"
-                "- Vesicle resources <span style='font-family:monospace;'>x(t)</span> are consumed (sharp dip).<br>"
+                "- Presynaptic calcium quickly accumulates → <span style='font-family:monospace;'>u(t)</span> jumps up.<br>"
+                "- Vesicle resources <span style='font-family:monospace;'>x(t)</span> are consumed.<br>"
                 "- <span style='font-family:monospace;'>J_eff = J_0 * u * x</span> transiently increases."
             ),
             "color": "rgba(255,99,71,0.45)",
@@ -124,11 +184,9 @@ process, the memory can be transiently held for about 1 second without enhanced 
         },
     ]
 
-    fig = go.Figure()
-
     # Draw filled rectangles (bars)
-    bar_y_bottom = 0.28
-    bar_y_top = 0.65
+    bar_y_bottom = 0.34
+    bar_y_top = 0.68
     for ph in phases:
         x0, x1 = ph["start"], ph["end"]
         xs = [x0, x1, x1, x0, x0]
@@ -138,74 +196,73 @@ process, the memory can be transiently held for about 1 second without enhanced 
             fill="toself",
             fillcolor=ph["color"],
             line=dict(color="rgba(0,0,0,0)"),
-            hoverinfo="skip",    # visuals skip hover
+            hoverinfo="skip",
             showlegend=False,
             mode="lines",
             name=""
         ))
 
-    # Invisible markers across each bar to reliably capture hover (big markers)
+    # Invisible hover markers across each bar (capture hover reliably)
     for ph in phases:
         x0, x1 = ph["start"], ph["end"]
-        xs = np.linspace(x0 + 1e-3, x1 - 1e-3, 24)
+        xs = np.linspace(x0 + 1e-3, x1 - 1e-3, 26)
         ys = np.full_like(xs, (bar_y_bottom + bar_y_top) / 2.0)
         fig.add_trace(go.Scatter(
             x=xs, y=ys,
             mode="markers",
-            marker=dict(size=44, color="rgba(0,0,0,0)"),  # invisible but captures hover
+            marker=dict(size=44, color="rgba(0,0,0,0)"),
             hovertemplate=ph["label"] + "<extra></extra>",
             showlegend=False,
             name=""
         ))
 
-    # decorative center line (no hover)
+    # Decorative center line
     fig.add_trace(go.Scatter(
-        x=[-50, 1050], y=[0.5, 0.5],
+        x=[time_min - 50, time_max + 50],
+        y=[0.5, 0.5],
         mode="lines",
-        line=dict(color="rgba(0,0,0,0.2)", width=1),
+        line=dict(color="rgba(0,0,0,0.18)", width=1),
         hoverinfo="skip",
         showlegend=False,
         name=""
     ))
 
-    # --- ASCII sketch as annotations in paper coordinates so it always appears below the bars ---
-    ascii_lines = [
-        "time (ms) -> 0       200      400      600      800     1000",
-        "spikes      :  ████     |                       |           ",
-        "             [1]      [2]                     [3]          ",
-        "u (Ca)      :   /‾‾‾‾‾‾‾‾‾‾‾‾‾‾\\_______________________",
-        "x (vesicle) : █‾‾\\_____/\\_____/\\_____/\\__________",
-        "J_eff       :   /‾‾‾\\        (primed for readout)       ",
-    ]
-
-    # Place ASCII lines using yref='paper' so they remain positioned under the bars
-    # start_y_p (paper coords) should be below the bar region; increment downward for each line
-    start_y_p = 0.05
-    y_step_p = 0.065
-    for i, line in enumerate(ascii_lines):
-        fig.add_annotation(
-            x=0, xref="x", xanchor="left",
-            y=start_y_p + i * y_step_p, yref="paper",
-            text=f"<span style='font-family:Courier New, monospace; font-size:12px;'>{line}</span>",
-            showarrow=False,
-            align="left"
-        )
-
-    # Layout styling
+    # Add the ASCII image as a layout image anchored to the x-axis (time) so it scales exactly to the time axis.
+    # yref='paper' with y0/y1 values places the image vertically in the figure canvas.
     fig.update_layout(
-        title="Timeline (bars overlaid on ASCII sketch)",
-        xaxis=dict(title="Time (ms)", range=[-50, 1050], showgrid=False, tick0=0, dtick=200),
-        yaxis=dict(visible=False, range=[0, 1.1]),
-        height=460,
-        margin=dict(l=40, r=40, t=70, b=80),
+        images=[
+            dict(
+                source=img_uri,
+                xref="x",
+                yref="paper",
+                x= time_min,     # left maps to time_min (0 ms)
+                y=0.0,           # bottom of image in paper coords
+                sizex=time_max - time_min,  # maps to x-axis span
+                sizey=0.28,      # fraction of the paper height the image should cover
+                xanchor="left",
+                yanchor="bottom",
+                sizing="stretch",
+                layer="below"    # make sure image is below traces so colored bars appear on top
+            )
+        ]
+    )
+
+    # Layout and axes
+    fig.update_xaxes(title_text="Time (ms)", range=[time_min - 50, time_max + 50], dtick=200)
+    fig.update_yaxes(visible=False, range=[0, 1.05])
+    fig.update_layout(
+        title="Timeline (bars overlaid on ASCII sketch image)",
+        height=520,
+        margin=dict(l=40, r=20, t=70, b=80),
         template="plotly_white",
         hovermode="closest"
     )
 
+    # Render
     st.plotly_chart(fig, use_container_width=True)
 
-    # redundant textual annotations below for accessibility
-    st.markdown("**Detailed annotations (also available on hover):**")
+    # Redundant textual annotations below for accessibility
+    st.markdown("**Detailed annotations (also shown on hover):**")
     st.markdown(
         """
     **1. Encoding (0–~200 ms)** — A strong, brief burst (`████`) of spikes drives the target neurons.
@@ -221,7 +278,6 @@ process, the memory can be transiently held for about 1 second without enhanced 
     - Because `u(t)` is still above baseline, the same synapses are **more effective** and the target neurons preferentially reactivate.
     """
     )
-
 
 
     # Other placeholder section no interactive
