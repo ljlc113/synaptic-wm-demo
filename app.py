@@ -212,57 +212,81 @@ def simulation_page():
         rng = np.random.default_rng()
 
     # Model notes
-    st.subheader("Model notes")
+        st.subheader("Model notes")
+
     st.markdown(
         """
-    - This demo uses **Poisson-like spiking probabilities**:  
-  • the chance of a neuron firing in each time step depends on its current synaptic efficacy.
+- This demo uses **Poisson-like spiking probabilities**:  
+  the chance of a neuron firing in each time step depends on its current synaptic efficacy.
 
-- **Presynaptic spikes:** when a presynaptic neuron fires, the synaptic variables update instantly:
+---
+
+### **Presynaptic spikes**
+When a presynaptic neuron fires, the synaptic variables update instantly:
         """
     )
     st.latex(r"u \leftarrow u + U(1 - u)")
     st.latex(r"x \leftarrow x \times (1 - u_{\text{new}})")
 
+    with st.expander("Show details — Intuition & plain words for presynaptic spikes"):
+        st.markdown(
+            """
+- **Intuition:**  
+  Each spike boosts the facilitation variable `u` (residual Ca²⁺ buildup)  
+  and depletes the resource variable `x` (vesicles used).  
+  The stronger the facilitation, the more transmitter is released, and the faster `x` is consumed.
+
+- **In plain words:**  
+  • Every spike makes the synapse *stronger* for the next spike (`u` rises).  
+  • But it also *uses up* available neurotransmitter (`x` falls).
+            """
+        )
+
     st.markdown(
         """
-    - **Intuition:** each spike boosts the facilitation variable `u` (residual Ca²⁺ buildup)  
-      and depletes the resource variable `x` (vesicles used).  
-      The stronger the facilitation, the more transmitter is released, and the faster `x` is consumed.
+---
 
-    - **In plain words:**  
-        • Every spike makes the synapse *stronger* for the next spike (`u` rises).  
-        • But it also *uses up* available neurotransmitter (`x` falls).
-
-- **Between spikes:** the variables relax continuously toward their baseline values:
+### **Between spikes**
+The variables relax continuously toward their baseline values:
         """
     )
     st.latex(r"\frac{du}{dt} = -\frac{u - U}{\tau_f}, \qquad \frac{dx}{dt} = \frac{1 - x}{\tau_d}")
 
+    with st.expander("Show details — Intuition & plain words for between spikes"):
+        st.markdown(
+            """
+- **Intuition:**  
+  • `u` decays slowly back to its resting value `U` with time constant `τ_f` (facilitation fades).  
+  • `x` recovers toward 1 with time constant `τ_d` (resources refill).  
+
+- **In plain words:**  
+  • After spiking stops, facilitation fades away (`u` → `U`) and resources are replenished (`x` → 1).  
+  • This slow decay of `u` allows the synapse to *"remember"* recent activity — the key to **activity-silent working memory**.
+            """
+        )
+
     st.markdown(
         """
-    - **Intuition:**  
-        • `u` decays slowly back to its resting value `U` with time constant `τ_f` (facilitation fades).  
-        • `x` recovers toward 1 with time constant `τ_d` (resources refill).  
+---
 
-    - **In plain words:**  
-        • After spiking stops, facilitation fades away (`u` → `U`) and resources are replenished (`x` → 1).  
-        • This slow decay of `u` allows the synapse to "remember" recent activity — the key to **activity-silent working memory**.
-
-- **Effective synaptic strength:**  
-  The instantaneous connection efficacy is given by:
+### **Effective synaptic strength**
+The instantaneous connection efficacy is given by:
         """
     )
     st.latex(r"J_{\text{eff}}(t) = J_0 \, u(t) \, x(t)")
 
-    st.markdown(
-        """
-    - **Intuition:** `J_eff` rises when facilitation (`u`) dominates and falls when depression (`x`) dominates.  
-      This product links the fast spike-driven changes and slow recovery processes, forming the bridge between **synaptic state** and **network behavior** seen in the plots below.
-        """
-    )
+    with st.expander("Show details — Intuition for J_eff"):
+        st.markdown(
+            """
+- **Intuition:**  
+  `J_eff` rises when facilitation (`u`) dominates and falls when depression (`x`) dominates.  
+  This product links the fast spike-driven changes and the slow recovery processes,  
+  forming the bridge between **synaptic state** and **network behavior** seen in the plots below.
+            """
+        )
 
-        # --- Collapsible restatement of u, x, and J_eff ---
+
+    # --- Collapsible restatement of u, x, and J_eff ---
     st.header("Restatement of synaptic variables")
 
     # Summary table always visible
