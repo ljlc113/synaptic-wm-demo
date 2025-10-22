@@ -183,33 +183,32 @@ process, the memory can be transiently held for about 1 second without enhanced 
 
     tick_times = [pixel_to_time(px) for px in prefix_pixel_positions]
 
-    # Now compute the ranges between successive ticks (these are the "spaces" the user wants)
-    ranges = [(tick_times[i], tick_times[i+1]) for i in range(len(tick_times)-1)]
+    # --- Replace ranges + shapes + hover markers with exactly three regions (0-200, 200-800, 800-1000) ---
+    # Build the 3 ranges we want: 0-200, 200-800, 800-1000 (use tick_times computed earlier)
+    # tick_times should be [t0, t1, t2, t3, t4, t5] corresponding to labels 0,200,400,600,800,1000
+    if len(tick_times) < 6:
+        raise RuntimeError("Expected 6 tick times (0,200,...1000). Found: " + str(tick_times))
 
-    # Colors (one color per range)
-    colors = ["rgba(255,99,71,0.35)", "rgba(100,149,237,0.35)", "rgba(60,179,113,0.35)"]
-    # If there are more ranges than colors (shouldn't be), cycle
-    colors = [colors[i % len(colors)] for i in range(len(ranges))]
+    ranges = [
+        (tick_times[0], tick_times[1]),  # 0 -> 200
+        (tick_times[1], tick_times[4]),  # 200 -> 800  (merge 200-400,400-600,600-800)
+        (tick_times[4], tick_times[5]),  # 800 -> 1000
+    ]
 
-    # Build the Plotly figure
-    fig = go.Figure()
+    # Colors for the three regions (red, blue, green)
+    region_colors = ["rgba(255,99,71,0.35)", "rgba(100,149,237,0.35)", "rgba(60,179,113,0.35)"]
 
-    # Add ASCII image as layout image, anchored to x axis (x range = time_min..time_max)
-    fig.update_layout(images=[dict(
-        source=img_uri,
-        xref="x",
-        yref="paper",
-        x=time_min,
-        y=image_bottom_paper,
-        sizex=(time_max - time_min),
-        sizey=image_sizey_paper,
-        xanchor="left",
-        yanchor="bottom",
-        sizing="stretch",
-        layer="below"
-    )])
+    # Remove any existing shapes/traces on fig if re-running (optional safety)
+    # If you're constructing fig from scratch you can skip this block. If not, uncomment:
+    # fig.data = []
+    # fig.layout.shapes = []
 
-    # Add colored shapes aligned to the time axis using the computed tick_times
+    # Add the ASCII image (if not already added). If you already added it earlier, skip this.
+    # fig.update_layout(images=[ dict(source=img_uri, xref="x", yref="paper", x=time_min, y=image_bottom_paper,
+    #                                 sizex=(time_max-time_min), sizey=image_sizey_paper, xanchor="left", yanchor="bottom",
+    #                                 sizing="stretch", layer="below") ])
+
+    # Add the three colored rectangle shapes (aligned to x axis, positioned in paper coords vertically)
     for i, (x0, x1) in enumerate(ranges):
         fig.add_shape(
             type="rect",
@@ -217,26 +216,59 @@ process, the memory can be transiently held for about 1 second without enhanced 
             yref="paper",
             x0=x0, x1=x1,
             y0=overlay_y0, y1=overlay_y1,
-            fillcolor=colors[i], line=dict(width=0),
-            layer="above", opacity=0.6
+            fillcolor=region_colors[i],
+            line=dict(width=0),
+            layer="above",
+            opacity=0.6
         )
 
-    # Add invisible hover markers to capture hover for each range
+    # Detailed hover text (three HTML strings) — use the annotations_html you already defined earlier or redefine:
+    annotations_html = [
+        # Encoding 0-200
+        (
+            "<b>1. Encoding (0–~200 ms)</b><br>"
+            "A strong, brief burst (<span style='font-family:monospace;'>████</span>) of spikes drives the target neurons.<br>"
+            "- Presynaptic calcium quickly accumulates → <span style='font-family:monospace;'>u(t)</span> jumps up.<br>"
+            "- Vesicle resources <span style='font-family:monospace;'>x(t)</span> are consumed (sharp dip).<br>"
+            "- <span style='font-family:monospace;'>J_eff = J_0 × u × x</span> transiently increases."
+        ),
+        # Silent delay 200-800
+        (
+            "<b>2. Silent delay (~200–800 ms)</b><br>"
+            "Spiking drops to baseline or stops.<br>"
+            "- <span style='font-family:monospace;'>u(t)</span> (residual Ca²⁺) decays slowly and remains <b>elevated</b>.<br>"
+            "- <span style='font-family:monospace;'>x(t)</span> recovers back toward 1 with its own time constant.<br>"
+            "- No persistent firing is needed; the memory is stored in the elevated <span style='font-family:monospace;'>u(t)</span>."
+        ),
+        # Readout 800-1000
+        (
+            "<b>3. Readout / Reactivation (~800–1000 ms)</b><br>"
+            "A weak nonspecific input or brief cue (<span style='font-family:monospace;'>|</span>) arrives.<br>"
+            "- Because <span style='font-family:monospace;'>u(t)</span> is still above baseline, the same synapses are <b>more effective</b> and the target neurons preferentially reactivate.<br>"
+            "- This reactivation can refresh <span style='font-family:monospace;'>u(t)</span> and extend maintenance if needed (periodic reactivations)."
+        ),
+    ]
+
+    # Add invisible marker traces (one trace per region; each trace has many invisible points to capture hover over the whole area)
     for i, (x0, x1) in enumerate(ranges):
-        xs = np.linspace(x0 + 1e-6, x1 - 1e-6, 18)
+        xs = np.linspace(x0 + 1e-6, x1 - 1e-6, 28)
         ys = np.full_like(xs, (overlay_y0 + overlay_y1) / 2.0)
-        # Example hover label — replace with your detailed multiline HTML text
-        hover_text = (
-            f"<b>Region {i+1}</b><br>"
-            f"Time range: {int(x0)}–{int(x1)} ms<br>"
-            f"(detailed annotation here)"
-        )
         fig.add_trace(go.Scatter(
-            x=xs, y=ys, mode="markers",
+            x=xs,
+            y=ys,
+            mode="markers",
             marker=dict(size=44, color="rgba(0,0,0,0)"),
-            hovertemplate=hover_text + "<extra></extra>",
-            showlegend=False, hoverinfo="text"
+            hovertemplate=annotations_html[i] + "<extra></extra>",
+            showlegend=False,
+            hoverinfo="text",
+            name=""
         ))
+
+    # Finally, ensure the x axis and layout are set (if not already)
+    fig.update_xaxes(title_text="Time (ms)", range=[time_min - 20, time_max + 20], dtick=200)
+    fig.update_yaxes(visible=False, range=[0, 1.0])
+    fig.update_layout(height=520, margin=dict(l=40, r=20, t=40, b=80), template="plotly_white", hovermode="closest")
+
 
     # Layout tweaks: x axis spans time_min..time_max
     fig.update_xaxes(title_text="Time (ms)", range=[time_min - 20, time_max + 20], dtick=200)
