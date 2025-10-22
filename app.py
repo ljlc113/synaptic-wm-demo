@@ -220,15 +220,15 @@ def simulation_page():
   the chance of a neuron firing in each time step depends on its current synaptic efficacy.
 
 - **Presynaptic spikes:** when a presynaptic neuron fires, the synaptic variables update instantly:
-
-    """
+        """
     )
     st.latex(r"u \leftarrow u + U(1 - u)")
     st.latex(r"x \leftarrow x \times (1 - u_{\text{new}})")
 
     st.markdown(
         """
-    - **Intuition:** each spike boosts the facilitation variable `u` (residual Ca²⁺ buildup) and depletes the resource variable `x` (vesicles used).  
+    - **Intuition:** each spike boosts the facilitation variable `u` (residual Ca²⁺ buildup)  
+      and depletes the resource variable `x` (vesicles used).  
       The stronger the facilitation, the more transmitter is released, and the faster `x` is consumed.
 
     - **In plain words:**  
@@ -236,8 +236,7 @@ def simulation_page():
         • But it also *uses up* available neurotransmitter (`x` falls).
 
 - **Between spikes:** the variables relax continuously toward their baseline values:
-
-    """
+        """
     )
     st.latex(r"\frac{du}{dt} = -\frac{u - U}{\tau_f}, \qquad \frac{dx}{dt} = \frac{1 - x}{\tau_d}")
 
@@ -249,10 +248,20 @@ def simulation_page():
 
     - **In plain words:**  
         • After spiking stops, facilitation fades away (`u` → `U`) and resources are replenished (`x` → 1).  
-        • This slow decay of `u` allows the synapse to "remember" recent activity — the key to activity-silent working memory.
+        • This slow decay of `u` allows the synapse to "remember" recent activity — the key to **activity-silent working memory**.
+
+- **Effective synaptic strength:**  
+  The instantaneous connection efficacy is given by:
         """
     )
+    st.latex(r"J_{\text{eff}}(t) = J_0 \, u(t) \, x(t)")
 
+    st.markdown(
+        """
+    - **Intuition:** `J_eff` rises when facilitation (`u`) dominates and falls when depression (`x`) dominates.  
+      This product links the fast spike-driven changes and slow recovery processes, forming the bridge between **synaptic state** and **network behavior** seen in the plots below.
+        """
+    )
 
         # --- Collapsible restatement of u, x, and J_eff ---
     st.header("Restatement of synaptic variables")
