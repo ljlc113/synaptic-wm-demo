@@ -212,12 +212,47 @@ def simulation_page():
         rng = np.random.default_rng()
 
     # Model notes
+        st.subheader("Model notes")
+
     st.markdown(
-        "**Model notes:**\n"
-        "- This demo uses Poisson-like spiking probabilities.\n"
-        "- Presynaptic spikes: u <- u + U*(1-u); x <- x * (1 - u_new)\n"
-        "- Between spikes: u decays to U with tau_f; x recovers to 1 with tau_d."
+        """
+- This demo uses **Poisson-like spiking probabilities**:  
+  the chance of a neuron firing in each time step depends on its current synaptic efficacy.
+
+- **Presynaptic spikes:** when a presynaptic neuron fires, the synaptic variables update instantly:
+
+    """
     )
+    st.latex(r"u \leftarrow u + U(1 - u)")
+    st.latex(r"x \leftarrow x \times (1 - u_{\text{new}})")
+
+    st.markdown(
+        """
+    - **Intuition:** each spike boosts the facilitation variable `u` (residual Ca²⁺ buildup) and depletes the resource variable `x` (vesicles used).  
+      The stronger the facilitation, the more transmitter is released, and the faster `x` is consumed.
+
+    - **In plain words:**  
+        • Every spike makes the synapse *stronger* for the next spike (`u` rises).  
+        • But it also *uses up* available neurotransmitter (`x` falls).
+
+- **Between spikes:** the variables relax continuously toward their baseline values:
+
+    """
+    )
+    st.latex(r"\frac{du}{dt} = -\frac{u - U}{\tau_f}, \qquad \frac{dx}{dt} = \frac{1 - x}{\tau_d}")
+
+    st.markdown(
+        """
+    - **Intuition:**  
+        • `u` decays slowly back to its resting value `U` with time constant `τ_f` (facilitation fades).  
+        • `x` recovers toward 1 with time constant `τ_d` (resources refill).  
+
+    - **In plain words:**  
+        • After spiking stops, facilitation fades away (`u` → `U`) and resources are replenished (`x` → 1).  
+        • This slow decay of `u` allows the synapse to "remember" recent activity — the key to activity-silent working memory.
+        """
+    )
+
 
         # --- Collapsible restatement of u, x, and J_eff ---
     st.header("Restatement of synaptic variables")
