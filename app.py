@@ -528,14 +528,14 @@ if page == "Introduction":
         introduction_page()   # call existing function if defined
     except NameError:
         st.error("Introduction page is not defined. Please implement `introduction_page()` or update the selector.")
-elif page == "Simulation":
-    try:
-        simulation_page()
-    except NameError:
-        st.error("Simulation page is not defined. Please implement `simulation_page()` or update the selector.")
 elif page == "Theory":
     try:
         theory_page()
     except NameError:
         st.error("Theory page is not defined. Please implement `theory_page()` or update the selector.")
+elif page == "Simulation":
+    try:
+        simulation_page()
+    except NameError:
+        st.error("Simulation page is not defined. Please implement `simulation_page()` or update the selector.")
 # -------------------------------------------------------------------------------
