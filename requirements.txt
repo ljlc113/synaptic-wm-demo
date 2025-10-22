@@ -3,3 +3,4 @@ numpy>=1.21
 matplotlib>=3.5
 plotly>=5.0
 pillow
+scipy
