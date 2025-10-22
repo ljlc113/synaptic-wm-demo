@@ -583,7 +583,7 @@ This page explains the short-term synaptic facilitation model used by Mongillo e
 
 **During the train:** if `u` grows faster than `x` falls, the synapse becomes *facilitated* (postsynaptic responses grow). If `x` becomes heavily depleted, you see net depression.
 
-**Between spikes:** `x` recovers with τ_D (~0.2 s in the paper) while `u` decays slowly with τ_F (~1.5 s). Because `u` decays slowly, information can be stored in elevated `u` for ~1 s without persistent spiking (activity-silent WM).
+**Between spikes:** `x` recovers with τ_D (time constant depressing, ~0.2 s in the paper) while `u` decays slowly with τ_F (time constant facilitating, ~1.5 s). Because `u` decays slowly, information can be stored in elevated `u` for ~1 s without persistent spiking (activity-silent WM).
 """
     )
 
