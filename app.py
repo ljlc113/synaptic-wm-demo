@@ -80,15 +80,13 @@ process, the memory can be transiently held for about 1 second without enhanced 
 """
     )
 
-    # Combined Plotly timeline + ASCII sketch (bars overlaid on the sketch)
+    # Combined timeline + ASCII sketch (fixed hover formatting and ASCII placement)
     import numpy as np
     import plotly.graph_objects as go
 
-    st.subheader("Timeline overlaid on the ASCII sketch (hover bars)")
+    st.subheader("Timeline overlaid on ASCII sketch (hover the bars)")
 
-    st.markdown("Hover anywhere over a colored bar to see the detailed annotation. The blocks are placed directly above the ASCII sketch.")
-
-    # phases and hover labels (multi-line HTML)
+    # phases and hover labels (use monospace spans for "code")
     phases = [
         {
             "start": 0,
@@ -96,9 +94,10 @@ process, the memory can be transiently held for about 1 second without enhanced 
             "label": (
                 "<b>1. Encoding (0–~200 ms)</b><br>"
                 "A strong, brief burst (████) of spikes drives the target neurons.<br>"
-                "- Presynaptic Ca²⁺ quickly accumulates → <code>u(t)</code> jumps up.<br>"
-                "- Vesicle resources <code>x(t)</code> are consumed.<br>"
-                "- <code>J_eff = J_0 * u * x</code> transiently increases."
+                "- Presynaptic calcium quickly accumulates → "
+                "<span style='font-family:monospace;'>u(t)</span> jumps up (see the u curve rising).<br>"
+                "- Vesicle resources <span style='font-family:monospace;'>x(t)</span> are consumed (sharp dip).<br>"
+                "- <span style='font-family:monospace;'>J_eff = J_0 * u * x</span> transiently increases."
             ),
             "color": "rgba(255,99,71,0.45)",
         },
@@ -108,8 +107,8 @@ process, the memory can be transiently held for about 1 second without enhanced 
             "label": (
                 "<b>2. Silent delay (~200–800 ms)</b><br>"
                 "Spiking drops to baseline or stops.<br>"
-                "- <code>u(t)</code> decays slowly and remains elevated (activity-silent).<br>"
-                "- <code>x(t)</code> recovers toward 1."
+                "- <span style='font-family:monospace;'>u(t)</span> (residual Ca²⁺) decays slowly and remains <b>elevated</b>.<br>"
+                "- <span style='font-family:monospace;'>x(t)</span> recovers back toward 1."
             ),
             "color": "rgba(100,149,237,0.40)",
         },
@@ -119,7 +118,7 @@ process, the memory can be transiently held for about 1 second without enhanced 
             "label": (
                 "<b>3. Readout / Reactivation (~800–1000 ms)</b><br>"
                 "A weak nonspecific input or brief cue arrives.<br>"
-                "- Facilitated synapses are more effective; target neurons reactivate."
+                "- Facilitated synapses are more effective; the target neurons preferentially reactivate."
             ),
             "color": "rgba(60,179,113,0.45)",
         },
@@ -127,9 +126,9 @@ process, the memory can be transiently held for about 1 second without enhanced 
 
     fig = go.Figure()
 
-    # --- Draw filled rectangles (bars) for each phase ---
-    bar_y_bottom = 0.2    # set bottom above the very bottom so ASCII lines sit below too
-    bar_y_top = 0.8
+    # Draw filled rectangles (bars)
+    bar_y_bottom = 0.28
+    bar_y_top = 0.65
     for ph in phases:
         x0, x1 = ph["start"], ph["end"]
         xs = [x0, x1, x1, x0, x0]
@@ -139,27 +138,27 @@ process, the memory can be transiently held for about 1 second without enhanced 
             fill="toself",
             fillcolor=ph["color"],
             line=dict(color="rgba(0,0,0,0)"),
-            hoverinfo="skip",  # visuals skip hover (invisible markers handle hover)
+            hoverinfo="skip",    # visuals skip hover
             showlegend=False,
             mode="lines",
             name=""
         ))
 
-    # --- Add invisible large markers across each bar to reliably capture hover ---
+    # Invisible markers across each bar to reliably capture hover (big markers)
     for ph in phases:
         x0, x1 = ph["start"], ph["end"]
-        xs = np.linspace(x0 + 1e-3, x1 - 1e-3, 20)
+        xs = np.linspace(x0 + 1e-3, x1 - 1e-3, 24)
         ys = np.full_like(xs, (bar_y_bottom + bar_y_top) / 2.0)
         fig.add_trace(go.Scatter(
             x=xs, y=ys,
             mode="markers",
-            marker=dict(size=40, color="rgba(0,0,0,0)"),
+            marker=dict(size=44, color="rgba(0,0,0,0)"),  # invisible but captures hover
             hovertemplate=ph["label"] + "<extra></extra>",
             showlegend=False,
             name=""
         ))
 
-    # --- Decorative timeline center line (no hover) ---
+    # decorative center line (no hover)
     fig.add_trace(go.Scatter(
         x=[-50, 1050], y=[0.5, 0.5],
         mode="lines",
@@ -169,14 +168,7 @@ process, the memory can be transiently held for about 1 second without enhanced 
         name=""
     ))
 
-    # --- ASCII sketch lines as text traces (monospace) aligned with x axis ---
-    # We will plot each ASCII line as a text trace with x coordinates spanning the figure.
-    # Choose x positions relative to time so text aligns horizontally with the ms ticks.
-    font_family = "Courier New, monospace"
-    font_size = 12
-
-    # Use several x positions evenly spaced so the long monospace string appears centered/left aligned.
-    # We'll attach the entire line at x=0 and use xanchor='left' to align.
+    # --- ASCII sketch as annotations in paper coordinates so it always appears below the bars ---
     ascii_lines = [
         "time (ms) -> 0       200      400      600      800     1000",
         "spikes      :  ████     |                       |           ",
@@ -186,39 +178,34 @@ process, the memory can be transiently held for about 1 second without enhanced 
         "J_eff       :   /‾‾‾\\        (primed for readout)       ",
     ]
 
-    # Place the ASCII lines near the bottom (y < bar_y_bottom)
-    start_y = 0.05
-    y_step = 0.06
+    # Place ASCII lines using yref='paper' so they remain positioned under the bars
+    # start_y_p (paper coords) should be below the bar region; increment downward for each line
+    start_y_p = 0.05
+    y_step_p = 0.065
     for i, line in enumerate(ascii_lines):
-        y_pos = start_y + i * y_step
-        # Plot text as annotation-like trace (single point with text)
-        fig.add_trace(go.Scatter(
-            x=[-10],  # position at left margin in ms coordinates
-            y=[y_pos],
-            mode="text",
-            text=[line],
-            textfont=dict(family=font_family, size=font_size, color="black"),
-            textposition="middle left",
-            hoverinfo="skip",
-            showlegend=False
-        ))
+        fig.add_annotation(
+            x=0, xref="x", xanchor="left",
+            y=start_y_p + i * y_step_p, yref="paper",
+            text=f"<span style='font-family:Courier New, monospace; font-size:12px;'>{line}</span>",
+            showarrow=False,
+            align="left"
+        )
 
-    # --- Axis, layout styling ---
+    # Layout styling
     fig.update_layout(
         title="Timeline (bars overlaid on ASCII sketch)",
         xaxis=dict(title="Time (ms)", range=[-50, 1050], showgrid=False, tick0=0, dtick=200),
-        yaxis=dict(visible=False, range=[0, 1.2]),
-        height=420,
-        margin=dict(l=20, r=20, t=60, b=60),
+        yaxis=dict(visible=False, range=[0, 1.1]),
+        height=460,
+        margin=dict(l=40, r=40, t=70, b=80),
         template="plotly_white",
         hovermode="closest"
     )
 
-    # Render the combined figure
     st.plotly_chart(fig, use_container_width=True)
 
-    # Add the numbered detailed annotations under the figure as textual fallback (also accessible)
-    st.markdown("**Detailed annotations (also shown on hover):**")
+    # redundant textual annotations below for accessibility
+    st.markdown("**Detailed annotations (also available on hover):**")
     st.markdown(
         """
     **1. Encoding (0–~200 ms)** — A strong, brief burst (`████`) of spikes drives the target neurons.
@@ -229,13 +216,12 @@ process, the memory can be transiently held for about 1 second without enhanced 
     **2. Silent delay (~200–800 ms)** — Spiking drops to baseline or stops.
     - `u(t)` (residual Ca²⁺) decays slowly and remains **elevated** for a while (activity-silent trace).
     - `x(t)` recovers back toward 1 with its own time constant.
-    - No persistent firing is needed; the memory is stored in the elevated `u(t)`.
 
     **3. Readout / Reactivation (~800–1000 ms)** — A weak nonspecific input or brief cue (`|`) arrives.
     - Because `u(t)` is still above baseline, the same synapses are **more effective** and the target neurons preferentially reactivate.
-    - This reactivation can refresh `u(t)` and extend maintenance if needed (periodic reactivations).
     """
     )
+
 
 
     # Other placeholder section no interactive
