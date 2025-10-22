@@ -212,12 +212,11 @@ def simulation_page():
         rng = np.random.default_rng()
 
     # Model notes
-        st.subheader("Model notes")
-
+    st.subheader("Model notes")
     st.markdown(
         """
-- This demo uses **Poisson-like spiking probabilities**:  
-  the chance of a neuron firing in each time step depends on its current synaptic efficacy.
+    - This demo uses **Poisson-like spiking probabilities**:  
+  • the chance of a neuron firing in each time step depends on its current synaptic efficacy.
 
 - **Presynaptic spikes:** when a presynaptic neuron fires, the synaptic variables update instantly:
         """
