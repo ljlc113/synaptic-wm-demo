@@ -80,6 +80,160 @@ process, the memory can be transiently held for about 1 second without enhanced 
 """
     )
 
+    # Interactive conceptual timeline + ASCII sketch
+    import numpy as np
+    import plotly.graph_objects as go
+
+    st.subheader("Interactive conceptual timeline — hover the bars (and the sketch below)")
+
+    st.markdown(
+        "Hover anywhere over a colored bar *or* its matching position on the ASCII sketch below to see detailed annotations."
+    )
+
+    # Phases and multi-line HTML-friendly hover text
+    phases = [
+        {
+            "start": 0,
+            "end": 200,
+            "label": (
+                "<b>1. Encoding (0–~200 ms)</b> — A strong, brief burst (████) of spikes drives the target neurons.<br>"
+                "- Presynaptic calcium quickly accumulates → <code>u(t)</code> jumps up (see the <code>u</code> curve rising).<br>"
+                "- Vesicle resources <code>x(t)</code> are consumed (sharp dip).<br>"
+                "- <code>J_eff = J_0 * u * x</code> transiently increases because <code>u</code> increases (even if <code>x</code> dips)."
+            ),
+            "color": "rgba(255,99,71,0.45)",
+        },
+        {
+            "start": 200,
+            "end": 800,
+            "label": (
+                "<b>2. Silent delay (~200–800 ms)</b> — Spiking drops to baseline or stops.<br>"
+                "- <code>u(t)</code> (residual Ca²⁺) decays slowly and remains <b>elevated</b> for a while (activity-silent trace).<br>"
+                "- <code>x(t)</code> recovers back toward 1 with its own time constant.<br>"
+                "- No persistent firing is needed; the memory is stored in the elevated <code>u(t)</code>."
+            ),
+            "color": "rgba(100,149,237,0.40)",
+        },
+        {
+            "start": 800,
+            "end": 1000,
+            "label": (
+                "<b>3. Readout / Reactivation (~800–1000 ms)</b> — A weak nonspecific input or brief cue (|) arrives.<br>"
+                "- Because <code>u(t)</code> is still above baseline, the same synapses are <b>more effective</b> and the target neurons preferentially reactivate.<br>"
+                "- This reactivation can refresh <code>u(t)</code> and extend maintenance if needed (periodic reactivations)."
+            ),
+            "color": "rgba(60,179,113,0.45)",
+        },
+    ]
+
+    fig = go.Figure()
+
+    # Visual filled rectangles (polygons) for each phase
+    bar_y_bottom = 0.0
+    bar_y_top = 1.0
+    for phase in phases:
+        x0 = phase["start"]
+        x1 = phase["end"]
+        xs = [x0, x1, x1, x0, x0]
+        ys = [bar_y_bottom, bar_y_bottom, bar_y_top, bar_y_top, bar_y_bottom]
+        fig.add_trace(go.Scatter(
+            x=xs,
+            y=ys,
+            fill="toself",
+            fillcolor=phase["color"],
+            line=dict(color="rgba(0,0,0,0)"),
+            hoverinfo="skip",  # visual trace does not show hover
+            showlegend=False,
+            mode="lines",
+            name=""
+        ))
+
+    # Add invisible markers across each bar to reliably capture hover (large markers for easier hover)
+    for phase in phases:
+        x0 = phase["start"]
+        x1 = phase["end"]
+        xs = np.linspace(x0 + 1e-3, x1 - 1e-3, 30)
+        ys = np.full_like(xs, (bar_y_bottom + bar_y_top) / 2.0)
+        fig.add_trace(go.Scatter(
+            x=xs,
+            y=ys,
+            mode="markers",
+            marker=dict(size=40, color="rgba(0,0,0,0)"),  # invisible but captures hover
+            hovertemplate=phase["label"] + "<extra></extra>",
+            showlegend=False,
+            name=""
+        ))
+
+    # Decorative line (no hover)
+    fig.add_trace(go.Scatter(
+        x=[-50, 1050],
+        y=[0.5, 0.5],
+        mode="lines",
+        line=dict(color="rgba(0,0,0,0.25)", width=1),
+        hoverinfo="skip",
+        showlegend=False,
+        name=""
+    ))
+
+    # Labels above bars
+    fig.add_annotation(x=(phases[0]["start"]+phases[0]["end"])/2, y=1.08, text="Encoding", showarrow=False, font=dict(color="rgb(150,0,0)"))
+    fig.add_annotation(x=(phases[1]["start"]+phases[1]["end"])/2, y=1.08, text="Silent delay", showarrow=False, font=dict(color="rgb(10,55,120)"))
+    fig.add_annotation(x=(phases[2]["start"]+phases[2]["end"])/2, y=1.08, text="Readout", showarrow=False, font=dict(color="rgb(0,120,50)"))
+
+    fig.update_layout(
+        title="Conceptual timeline of facilitation-based working memory",
+        xaxis=dict(title="Time (ms)", range=[-50, 1050], showgrid=False),
+        yaxis=dict(visible=False, range=[0, 1.2]),
+        height=320,
+        margin=dict(l=40, r=40, t=70, b=20),
+        template="plotly_white",
+        hovermode="closest"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # -----------------------
+    # ASCII conceptual sketch aligned under the chart
+    # -----------------------
+    # The ASCII sketch is sized for readability; it's placed after the Plotly chart.
+    # Hovering the Plotly bars above corresponds visually to ranges in this ASCII sketch.
+    st.subheader("Annotated conceptual ASCII sketch (hover the corresponding bars above)")
+
+    ascii_sketch = (
+        "time (ms) -> 0       200      400      600      800     1000\n"
+        "spikes      :  ████     |                       |           \n"
+        "              [1]      [2]                     [3]          \n"
+        "u (Ca)      :   /‾‾‾‾‾‾‾‾‾‾‾‾‾‾\\_______________________\n"
+        "x (vesicle) : █‾‾\\_____/\\_____/\\_____/\\__________\n"
+        "J_eff       :   /‾‾‾\\        (primed for readout)       \n"
+    )
+
+    st.code(ascii_sketch, language="text")
+
+    # Provide the detailed numbered annotations below so users can read them as well
+    st.markdown("**Detailed annotations (also available on hover):**")
+    st.markdown(
+        """
+    **1. Encoding (0–~200 ms)** — A strong, brief burst (`████`) of spikes drives the target neurons.
+    - Presynaptic calcium quickly accumulates → `u(t)` jumps up (see the `u` curve rising).
+    - Vesicle resources `x(t)` are consumed (sharp dip).
+    - `J_eff = J_0 * u * x` transiently increases because `u` increases (even if `x` dips).
+
+    **2. Silent delay (~200–800 ms)** — Spiking drops to baseline or stops.
+    - `u(t)` (residual Ca²⁺) decays slowly and remains **elevated** for a while (activity-silent trace).
+    - `x(t)` recovers back toward 1 with its own time constant.
+    - No persistent firing is needed; the memory is stored in the elevated `u(t)`.
+
+    **3. Readout / Reactivation (~800–1000 ms)** — A weak nonspecific input or brief cue (`|`) arrives.
+    - Because `u(t)` is still above baseline, the same synapses are **more effective** and the target neurons preferentially reactivate.
+    - This reactivation can refresh `u(t)` and extend maintenance if needed (periodic reactivations).
+    """
+    )
+
+    st.info("Tip: hover the colored bars in the timeline above or hover over the same horizontal region on the ASCII sketch to reveal the annotations.")
+
+
+
         # --- Conceptual sketch with key + annotations (replace previous sketch block) ---
 
     import numpy as np
