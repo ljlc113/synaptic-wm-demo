@@ -35,7 +35,7 @@ if page == "Introduction":
 > *“We therefore propose that an item is maintained in the WM state by short-term synaptic facilitation
 mediated by increased residual calcium levels at the presynaptic terminals of the neurons that code
 for this item. Because removal of residual calcium from presynaptic terminals is a relatively slow
-process, the memory can be transiently held for about 1 second without enhanced spiking activity.”*
+process, the memory can be transiently held for about 1 second without enhanced spiking activity.” (pg. 1543)*
 """
     )
 
@@ -81,8 +81,73 @@ process, the memory can be transiently held for about 1 second without enhanced 
     )
 
         # --- Conceptual sketch with key + annotations (replace previous sketch block) ---
-    st.subheader("Conceptual sketch (annotated)")
 
+    import plotly.graph_objects as go
+
+    st.subheader("Interactive conceptual sketch")
+
+    st.markdown(
+        """
+    Hover over each colored region below to see what’s happening during the simulation
+    (encoding burst, silent maintenance, and readout reactivation).
+    """
+    )
+
+    # Define time points (ms)
+    time = [0, 200, 800, 1000]
+
+    # Define key phases
+    phases = [
+        dict(x0=0, x1=200, color="rgba(255, 99, 71, 0.4)", label="Encoding burst (spikes ↑)"),
+        dict(x0=200, x1=800, color="rgba(100, 149, 237, 0.3)", label="Silent maintenance (no spiking)"),
+        dict(x0=800, x1=1000, color="rgba(60, 179, 113, 0.3)", label="Readout / reactivation"),
+    ]
+
+    # Create base curves for u(t), x(t), J_eff (stylized)
+    t = np.linspace(0, 1000, 400)
+    u = np.piecewise(t, [t < 200, (t >= 200) & (t < 800), t >= 800],
+                    [lambda t: 0.2 + 0.8 * (t / 200), lambda t: 1.0 * np.exp(-(t - 200) / 600), lambda t: 0.5 + 0.4 * np.exp(-(t - 800) / 150)])
+    x = np.piecewise(t, [t < 200, (t >= 200) & (t < 800), t >= 800],
+                    [lambda t: 1 - 0.3 * (t / 200), lambda t: 0.7 + 0.3 * (1 - np.exp(-(t - 200) / 300)), lambda t: 1 - 0.2 * np.exp(-(t - 800) / 150)])
+    J_eff = u * x
+
+    # Create figure
+    fig = go.Figure()
+
+    # Add shaded regions for phases
+    for p in phases:
+        fig.add_vrect(
+            x0=p["x0"], x1=p["x1"],
+            fillcolor=p["color"], line_width=0,
+            annotation_text=p["label"], annotation_position="top left",
+            opacity=0.3
+        )
+
+    # Add curves
+    fig.add_trace(go.Scatter(x=t, y=u, mode="lines", name="u(t) (facilitation / residual Ca²⁺)",
+                            line=dict(color="orange", width=3),
+                            hovertemplate="Time: %{x:.0f} ms<br>u(t): %{y:.2f}<extra></extra>"))
+    fig.add_trace(go.Scatter(x=t, y=x, mode="lines", name="x(t) (available resources)",
+                            line=dict(color="blue", width=3, dash="dot"),
+                            hovertemplate="Time: %{x:.0f} ms<br>x(t): %{y:.2f}<extra></extra>"))
+    fig.add_trace(go.Scatter(x=t, y=J_eff, mode="lines", name="J_eff (effective strength)",
+                            line=dict(color="green", width=3, dash="dash"),
+                            hovertemplate="Time: %{x:.0f} ms<br>J_eff: %{y:.2f}<extra></extra>"))
+
+    fig.update_layout(
+        title="Conceptual time course of facilitation-based working memory",
+        xaxis_title="Time (ms)",
+        yaxis_title="Normalized value",
+        template="plotly_white",
+        hovermode="x unified",
+        height=400,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.subheader("Conceptual sketch (annotated)")
+    
     st.markdown("**Key**")
     st.markdown(
         """
