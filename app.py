@@ -86,9 +86,7 @@ process, the memory can be transiently held for about 1 second without enhanced 
 
     st.subheader("Interactive conceptual timeline (hover the bars)")
 
-    st.markdown(
-        "Hover anywhere over a colored bar to see the explanation for that phase."
-    )
+    st.markdown("Hover anywhere over a colored bar to see the explanation for that phase.")
 
     # Define the key time windows (ms)
     phases = [
@@ -114,10 +112,10 @@ process, the memory can be transiently held for about 1 second without enhanced 
             fill="toself",
             fillcolor=phase["color"],
             line=dict(color="rgba(0,0,0,0)"),
-            hoverinfo="text",
-            hovertext=phase["label"],
+            hovertemplate=f"{phase['label']}<extra></extra>",
             showlegend=False,
-            mode="lines"
+            mode="lines",
+            name=""  # empty name avoids default label in hover
         ))
 
     # Optional: add a thin central timeline line for aesthetics (no hover)
@@ -127,7 +125,8 @@ process, the memory can be transiently held for about 1 second without enhanced 
         mode="lines",
         line=dict(color="rgba(0,0,0,0.25)", width=1),
         hoverinfo="skip",
-        showlegend=False
+        showlegend=False,
+        name=""
     ))
 
     # Add textual labels above each bar
@@ -147,7 +146,6 @@ process, the memory can be transiently held for about 1 second without enhanced 
     )
 
     st.plotly_chart(fig, use_container_width=True)
-
 
 
     st.subheader("Conceptual sketch (annotated)")
