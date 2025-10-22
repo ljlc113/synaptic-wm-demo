@@ -84,67 +84,66 @@ process, the memory can be transiently held for about 1 second without enhanced 
 
     import plotly.graph_objects as go
 
-    st.subheader("Interactive conceptual sketch")
+    st.subheader("Interactive conceptual timeline")
 
     st.markdown(
         """
-    Hover over each colored region below to see what’s happening during the simulation
-    (encoding burst, silent maintenance, and readout reactivation).
+    Hover over each colored region to reveal the annotation text explaining what happens during that time window:
+    - **Encoding** (0–200 ms): the initial spike burst loads the memory.
+    - **Silent Maintenance** (200–800 ms): residual Ca²⁺ silently maintains the memory without spiking.
+    - **Readout / Reactivation** (800–1000 ms): a weak cue reactivates the memory trace.
     """
     )
 
-    # Define time points (ms)
-    time = [0, 200, 800, 1000]
-
-    # Define key phases
+    # Define the key time windows
     phases = [
-        dict(x0=0, x1=200, color="rgba(255, 99, 71, 0.4)", label="Encoding burst (spikes ↑)"),
-        dict(x0=200, x1=800, color="rgba(100, 149, 237, 0.3)", label="Silent maintenance (no spiking)"),
-        dict(x0=800, x1=1000, color="rgba(60, 179, 113, 0.3)", label="Readout / reactivation"),
+        {"start": 0, "end": 200, "label": "Encoding (neurons fire, Ca²⁺ ↑, synapses facilitate)", "color": "rgba(255, 99, 71, 0.5)"},
+        {"start": 200, "end": 800, "label": "Silent Maintenance (no firing, residual Ca²⁺ sustains trace)", "color": "rgba(100, 149, 237, 0.4)"},
+        {"start": 800, "end": 1000, "label": "Readout / Reactivation (weak input triggers recall)", "color": "rgba(60, 179, 113, 0.4)"},
     ]
-
-    # Create base curves for u(t), x(t), J_eff (stylized)
-    t = np.linspace(0, 1000, 400)
-    u = np.piecewise(t, [t < 200, (t >= 200) & (t < 800), t >= 800],
-                    [lambda t: 0.2 + 0.8 * (t / 200), lambda t: 1.0 * np.exp(-(t - 200) / 600), lambda t: 0.5 + 0.4 * np.exp(-(t - 800) / 150)])
-    x = np.piecewise(t, [t < 200, (t >= 200) & (t < 800), t >= 800],
-                    [lambda t: 1 - 0.3 * (t / 200), lambda t: 0.7 + 0.3 * (1 - np.exp(-(t - 200) / 300)), lambda t: 1 - 0.2 * np.exp(-(t - 800) / 150)])
-    J_eff = u * x
 
     # Create figure
     fig = go.Figure()
 
-    # Add shaded regions for phases
-    for p in phases:
-        fig.add_vrect(
-            x0=p["x0"], x1=p["x1"],
-            fillcolor=p["color"], line_width=0,
-            annotation_text=p["label"], annotation_position="top left",
-            opacity=0.3
-        )
+    # Add invisible line for the timeline axis
+    fig.add_trace(go.Scatter(
+        x=[0, 1000], y=[0, 0],
+        mode="lines",
+        line=dict(color="rgba(0,0,0,0)"),
+        hoverinfo="skip",
+        showlegend=False
+    ))
 
-    # Add curves
-    fig.add_trace(go.Scatter(x=t, y=u, mode="lines", name="u(t) (facilitation / residual Ca²⁺)",
-                            line=dict(color="orange", width=3),
-                            hovertemplate="Time: %{x:.0f} ms<br>u(t): %{y:.2f}<extra></extra>"))
-    fig.add_trace(go.Scatter(x=t, y=x, mode="lines", name="x(t) (available resources)",
-                            line=dict(color="blue", width=3, dash="dot"),
-                            hovertemplate="Time: %{x:.0f} ms<br>x(t): %{y:.2f}<extra></extra>"))
-    fig.add_trace(go.Scatter(x=t, y=J_eff, mode="lines", name="J_eff (effective strength)",
-                            line=dict(color="green", width=3, dash="dash"),
-                            hovertemplate="Time: %{x:.0f} ms<br>J_eff: %{y:.2f}<extra></extra>"))
+    # Add transparent scatter regions with hovertext
+    for phase in phases:
+        fig.add_trace(go.Scatter(
+            x=[phase["start"], phase["end"]],
+            y=[0, 0],
+            mode="lines",
+            line=dict(width=40, color=phase["color"]),
+            hoverinfo="text",
+            text=[phase["label"], phase["label"]],
+            showlegend=False
+        ))
 
+    # Add annotations to label the timeline
+    fig.add_annotation(x=100, y=0.15, text="Encoding", showarrow=False, font=dict(color="red", size=12))
+    fig.add_annotation(x=500, y=0.15, text="Silent Maintenance", showarrow=False, font=dict(color="blue", size=12))
+    fig.add_annotation(x=900, y=0.15, text="Readout", showarrow=False, font=dict(color="green", size=12))
+
+    # Style
     fig.update_layout(
-        title="Conceptual time course of facilitation-based working memory",
-        xaxis_title="Time (ms)",
-        yaxis_title="Normalized value",
+        title="Conceptual timeline of facilitation-based working memory",
+        xaxis=dict(title="Time (ms)", range=[-50, 1050], showgrid=False),
+        yaxis=dict(showticklabels=False, showgrid=False, zeroline=False),
+        height=250,
+        margin=dict(l=50, r=50, t=50, b=40),
         template="plotly_white",
-        hovermode="x unified",
-        height=400,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        hovermode="x unified"
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
 
     st.subheader("Conceptual sketch (annotated)")
     
