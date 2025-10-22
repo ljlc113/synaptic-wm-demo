@@ -82,11 +82,12 @@ process, the memory can be transiently held for about 1 second without enhanced 
 
         # --- Conceptual sketch with key + annotations (replace previous sketch block) ---
 
+    import numpy as np
     import plotly.graph_objects as go
 
-    st.subheader("Interactive conceptual timeline (hover the bars)")
+    st.subheader("Interactive conceptual timeline (hover anywhere on the bars)")
 
-    st.markdown("Hover anywhere over a colored bar to see a detailed annotation for that phase.")
+    st.markdown("Hover anywhere on a colored bar to see a detailed annotation for that phase.")
 
     # Define phases and the multi-line hover text (HTML-friendly)
     phases = [
@@ -126,13 +127,13 @@ process, the memory can be transiently held for about 1 second without enhanced 
 
     fig = go.Figure()
 
-    # Draw each phase as a filled rectangle (polygon) with hovertemplate containing the annotation text.
+    # Visual filled rectangles (polygons) for each phase
     bar_y_bottom = 0.0
     bar_y_top = 1.0
     for phase in phases:
         x0 = phase["start"]
         x1 = phase["end"]
-        xs = [x0, x1, x1, x0, x0]  # closed polygon
+        xs = [x0, x1, x1, x0, x0]
         ys = [bar_y_bottom, bar_y_bottom, bar_y_top, bar_y_top, bar_y_bottom]
         fig.add_trace(go.Scatter(
             x=xs,
@@ -140,13 +141,30 @@ process, the memory can be transiently held for about 1 second without enhanced 
             fill="toself",
             fillcolor=phase["color"],
             line=dict(color="rgba(0,0,0,0)"),
-            hovertemplate=phase["label"] + "<extra></extra>",  # show only the text, suppress extras
+            hoverinfo="skip",       # visual trace should not show hover
             showlegend=False,
             mode="lines",
             name=""
         ))
 
-    # decorative central line (no hover)
+    # Add invisible markers across each bar to reliably capture hover
+    # Use many evenly spaced points; markers are invisible but hovertemplate triggers.
+    for phase in phases:
+        x0 = phase["start"]
+        x1 = phase["end"]
+        xs = np.linspace(x0 + 1e-3, x1 - 1e-3, 30)  # avoid exact endpoints
+        ys = np.full_like(xs, (bar_y_bottom + bar_y_top) / 2.0)
+        fig.add_trace(go.Scatter(
+            x=xs,
+            y=ys,
+            mode="markers",
+            marker=dict(size=40, color="rgba(0,0,0,0)"),  # invisible markers but big hover area
+            hovertemplate=phase["label"] + "<extra></extra>",
+            showlegend=False,
+            name=""
+        ))
+
+    # Decorative timeline line (no hover)
     fig.add_trace(go.Scatter(
         x=[-50, 1050],
         y=[0.5, 0.5],
@@ -157,7 +175,7 @@ process, the memory can be transiently held for about 1 second without enhanced 
         name=""
     ))
 
-    # labels above bars
+    # Labels above bars
     fig.add_annotation(x=(phases[0]["start"]+phases[0]["end"])/2, y=1.08, text="Encoding", showarrow=False, font=dict(color="rgb(150,0,0)"))
     fig.add_annotation(x=(phases[1]["start"]+phases[1]["end"])/2, y=1.08, text="Silent delay", showarrow=False, font=dict(color="rgb(10,55,120)"))
     fig.add_annotation(x=(phases[2]["start"]+phases[2]["end"])/2, y=1.08, text="Readout", showarrow=False, font=dict(color="rgb(0,120,50)"))
@@ -166,14 +184,14 @@ process, the memory can be transiently held for about 1 second without enhanced 
         title="Conceptual timeline of facilitation-based working memory",
         xaxis=dict(title="Time (ms)", range=[-50, 1050], showgrid=False),
         yaxis=dict(visible=False, range=[0, 1.2]),
-        height=300,
+        height=320,
         margin=dict(l=40, r=40, t=70, b=40),
         template="plotly_white",
         hovermode="closest"
     )
 
-    # Render
     st.plotly_chart(fig, use_container_width=True)
+
 
     # Other placeholder section no interactive
     st.subheader("Conceptual sketch (annotated)")
