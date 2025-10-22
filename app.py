@@ -13,6 +13,27 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(layout="wide", page_title="Synaptic Facilitation WM Demo")
 
+# Sidebar navigation
+# --- Page selector (add or replace the existing one in your app) ---
+# NOTE: If your app already has a sidebar selectbox controlling pages, replace that selectbox with the snippet below.
+# If you insert this snippet while another selector already exists, remove or adapt the other one to avoid duplicate UI.
+pages = ["Introduction", "Simulation", "Theory"]
+page = st.sidebar.selectbox("Select page", pages)
+
+if page == "Introduction":
+    # if you already have an Introduction function, call it; else we show a placeholder
+    try:
+        introduction_page()   # your existing function (if present)
+    except Exception:
+        st.write("Introduction page placeholder. Replace with your existing content or remove this placeholder.")
+elif page == "Simulation":
+    try:
+        simulation_page()  # your existing simulation function
+    except Exception:
+        st.write("Simulation page placeholder. Replace with your existing content or remove this placeholder.")
+elif page == "Theory":
+    theory_page()
+
 # ----------------------------
 # Introduction page (explanatory)
 # ----------------------------
@@ -347,233 +368,3 @@ else:
         b64 = base64.b64encode(bio.read()).decode()
         href = f'<a href="data:application/octet-stream;base64,{b64}" download="synfac_sim.npz">Download simulation .npz</a>'
         st.markdown(href, unsafe_allow_html=True)
-
-# ----------------- Begin THEME / THEORY Page Block -----------------
-# Paste this block into app.py (after your imports at the top)
-# If your app already has a page selector in the sidebar, replace it with the "page" selectbox below.
-# Otherwise this will add a new sidebar selector that includes the existing pages "Introduction" and "Simulation".
-#
-# Requires: streamlit, numpy, plotly
-# -----------------------------------------------------------------
-
-import streamlit as st
-import numpy as np
-import plotly.graph_objects as go
-
-def simulate_u_x(time, spike_times, U=0.3, tau_D=0.2, tau_F=1.5, dt=0.001):
-    """
-    Simulate u(t) and x(t) using the Mongillo et al. (2008) model.
-    time : 1D array of times (s)
-    spike_times : iterable of spike times (s)
-    Returns u, x, J_eff arrays aligned with time
-    """
-    n = time.size
-    u = np.zeros(n)
-    x = np.zeros(n)
-    u_val = U
-    x_val = 1.0
-    exp_F = np.exp(-dt / tau_F)
-    exp_D = np.exp(-dt / tau_D)
-
-    spike_idx = set(int(np.round(t / dt)) for t in spike_times if t >= time[0] and t <= time[-1])
-    for i, t in enumerate(time):
-        if i in spike_idx:
-            # spike occurs
-            u_val = u_val + U * (1.0 - u_val)
-            x_val = x_val * (1.0 - u_val)
-        # store
-        u[i] = u_val
-        x[i] = x_val
-        # relax between spikes
-        u_val = U + (u_val - U) * exp_F
-        x_val = 1.0 - (1.0 - x_val) * exp_D
-
-    J_eff = u * x
-    return u, x, J_eff
-
-# ----------------- Begin THEME / THEORY Page Block -----------------
-# Paste this block into app.py (after your imports at the top)
-# If your app already has a page selector in the sidebar, replace it with the "page" selectbox below.
-# Otherwise this will add a new sidebar selector that includes the existing pages "Introduction" and "Simulation".
-#
-# Requires: streamlit, numpy, plotly
-# -----------------------------------------------------------------
-
-import streamlit as st
-import numpy as np
-import plotly.graph_objects as go
-
-def simulate_u_x(time, spike_times, U=0.3, tau_D=0.2, tau_F=1.5, dt=0.001):
-    """
-    Simulate u(t) and x(t) using the Mongillo et al. (2008) model.
-    time : 1D array of times (s)
-    spike_times : iterable of spike times (s)
-    Returns u, x, J_eff arrays aligned with time
-    """
-    n = time.size
-    u = np.zeros(n)
-    x = np.zeros(n)
-    u_val = U
-    x_val = 1.0
-    exp_F = np.exp(-dt / tau_F)
-    exp_D = np.exp(-dt / tau_D)
-
-    spike_idx = set(int(np.round(t / dt)) for t in spike_times if t >= time[0] and t <= time[-1])
-    for i, t in enumerate(time):
-        if i in spike_idx:
-            # spike occurs
-            u_val = u_val + U * (1.0 - u_val)
-            x_val = x_val * (1.0 - u_val)
-        # store
-        u[i] = u_val
-        x[i] = x_val
-        # relax between spikes
-        u_val = U + (u_val - U) * exp_F
-        x_val = 1.0 - (1.0 - x_val) * exp_D
-
-    J_eff = u * x
-    return u, x, J_eff
-
-def theory_page():
-    st.title("Theory: Synaptic Facilitation & Network Architecture")
-
-    # show uploaded schematic image if present
-    try:
-        st.image("/mnt/data/b887757b-2a3e-45db-a3d9-b48682245ae8.png", caption="Fig.1: STP model (left) and network architecture (right)", use_column_width=True)
-    except Exception:
-        st.info("Figure 1 image not found in /mnt/data; replace path or upload the image if you want it displayed.")
-
-    # Explanatory text
-    st.header("Overview")
-    st.markdown(
-        """
-This page explains the short-term synaptic facilitation model used by Mongillo et al. (2008) and the network architecture they simulated.
-- Panel **A** (left) shows the kinetic scheme and equations for the synaptic variables `x(t)` (available resources) and `u(t)` (utilization / residual Ca).
-- Panel **A** (right) shows how `u` increases (facilitation) and `x` decreases (depression) during a presynaptic spike train; synaptic efficacy is proportional to `u·x`.
-- Panel **B** shows the recurrent network architecture: colored triangles are selective excitatory neurons (each color codes one memory item), open black triangles are nonselective excitatory neurons, and black circles are inhibitory neurons providing global feedback.
-"""
-    )
-
-    st.header("Equations (Short-term facilitation / depression)")
-    st.latex(r"\frac{dx}{dt} = \frac{1-x}{\tau_D} - u\,x\,\delta(t-t_{sp})")
-    st.latex(r"\frac{du}{dt} = \frac{U - u}{\tau_F} + U(1-u)\,\delta(t-t_{sp})")
-    st.markdown(
-        """
-- `x(t)` = fraction of available vesicles (decreases at spikes, recovers with time constant `τ_D`).
-- `u(t)` = utilization / release probability (jumps at spikes, decays slowly with `τ_F`).
-- `δ(t-t_{sp})` indicates instantaneous jumps at presynaptic spike times.
-- Synaptic efficacy is proportional to `u(t)·x(t)`.
-"""
-    )
-
-    st.header("Explanation (step-by-step)")
-    st.markdown(
-        """
-**Encoding (presynaptic spike train):** each spike causes  
-- an increase in `u` (facilitation) because of residual Ca²⁺, and  
-- a decrease in `x` (vesicle use).  
-
-**During the train:** if `u` grows faster than `x` falls, the synapse becomes *facilitated* (postsynaptic responses grow). If `x` becomes heavily depleted, you see net depression.
-
-**Between spikes:** `x` recovers with τ_D (~0.2 s in the paper) while `u` decays slowly with τ_F (~1.5 s). Because `u` decays slowly, information can be stored in elevated `u` for ~1 s without persistent spiking (activity-silent WM).
-"""
-    )
-
-    st.header("Interactive demo — u(t), x(t) and J_eff = u·x")
-    st.markdown("Adjust the parameters and spike pattern to see how facilitation and depression interact.")
-
-    # interactive controls
-    col1, col2, col3 = st.columns([1,1,1])
-    with col1:
-        U_val = st.slider("U (per-spike increment)", min_value=0.05, max_value=0.6, value=0.30, step=0.01)
-        tau_D = st.slider("τ_D (s)", min_value=0.05, max_value=1.0, value=0.2, step=0.05)
-    with col2:
-        tau_F = st.slider("τ_F (s)", min_value=0.2, max_value=3.0, value=1.5, step=0.1)
-        dt = 0.001
-    with col3:
-        # pre-defined spike patterns and custom box
-        pattern = st.selectbox("Spike pattern", options=["Burst (5 spikes @ 50 Hz)","Single spike","Poisson (rate 20 Hz)","Manual times"])
-        if pattern == "Manual times":
-            manual = st.text_input("Enter spike times (s), comma-separated", value="0.05,0.06,0.07")
-            try:
-                spike_times = [float(s.strip()) for s in manual.split(",") if s.strip()!='']
-            except Exception:
-                spike_times = [0.05,0.06,0.07]
-        else:
-            spike_times = None
-
-    # construct time vector and spike times
-    T = 1.0  # 1 second demo
-    time = np.arange(0.0, T + dt/2, dt)
-
-    if pattern == "Burst (5 spikes @ 50 Hz)":
-        base = 0.05
-        spike_times = [base + k*(1/50.0) for k in range(5)]
-    elif pattern == "Single spike":
-        spike_times = [0.05]
-    elif pattern == "Poisson (rate 20 Hz)":
-        rng = np.random.default_rng(42)
-        rate = 20.0
-        # generate Poisson spike train converted to event times
-        p = rate * dt
-        spikes = rng.random(time.size) < p
-        spike_times = list(time[spikes])
-    # otherwise manual handled above
-
-    # simulate
-    u, x, J = simulate_u_x(time, spike_times, U=U_val, tau_D=tau_D, tau_F=tau_F, dt=dt)
-
-    # Build Plotly figure
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=time, y=u, mode="lines", name="u(t)", line=dict(color="royalblue")))
-    fig.add_trace(go.Scatter(x=time, y=x, mode="lines", name="x(t)", line=dict(color="crimson")))
-    fig.add_trace(go.Scatter(x=time, y=J, mode="lines", name="J_eff = u·x", line=dict(color="black")))
-
-    # overlay spike markers
-    fig.add_trace(go.Scatter(x=spike_times, y=[1.02]*len(spike_times), mode="markers", marker=dict(size=8, color="black"), name="spikes", hoverinfo="x"))
-
-    fig.update_layout(
-        height=420,
-        xaxis_title="Time (s)",
-        yaxis_title="u, x, J_eff (arb. units)",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1.0),
-        margin=dict(l=40, r=10, t=30, b=40)
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-    # show numeric summary and interpretation
-    st.markdown("**Interpretation**")
-    st.markdown(
-        f"""
-- Peak `u` after the burst: **{u.max():.3f}**  
-- Minimum `x` during burst: **{x.min():.3f}**  
-- Peak `J_eff` during the trial: **{J.max():.3f}**  
-
-If `u` increases sufficiently and `x` doesn't deplete too much, `J_eff` can increase during a brief stimulus — that's facilitation. If `x` is strongly depleted, `J_eff` will fall (depression dominates).
-"""
-    )
-
-    st.markdown("---")
-    st.markdown("If you want this same explanation added as a static second page (e.g., a printable/markdown page) or integrated into your existing multi-page selector, tell me where your current page selector lives in `app.py` and I will provide a one-line patch you can paste in.")
-
-# --- Page selector (add or replace the existing one in your app) ---
-# NOTE: If your app already has a sidebar selectbox controlling pages, replace that selectbox with the snippet below.
-# If you insert this snippet while another selector already exists, remove or adapt the other one to avoid duplicate UI.
-pages = ["Introduction", "Simulation", "Theory"]
-page = st.sidebar.selectbox("Select page", pages)
-
-if page == "Introduction":
-    # if you already have an Introduction function, call it; else we show a placeholder
-    try:
-        introduction_page()   # your existing function (if present)
-    except Exception:
-        st.write("Introduction page placeholder. Replace with your existing content or remove this placeholder.")
-elif page == "Simulation":
-    try:
-        simulation_page()  # your existing simulation function
-    except Exception:
-        st.write("Simulation page placeholder. Replace with your existing content or remove this placeholder.")
-elif page == "Theory":
-    theory_page()
-
-# ----------------- End THEME / THEORY Page Block -----------------
