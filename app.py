@@ -167,7 +167,7 @@ def simulation_page():
 
     st.write(
         "This is a simplified, interactive simulation inspired by Mongillo et al. (2008). "
-        "It uses probabilistic spiking (Poisson-like) and Tsodyks–Markram updates for u and x."
+        "It uses probabilistic spiking (Poisson-like, meaning the chance of a neuron firing in each time step depends on its current synaptic efficacy) and Tsodyks–Markram updates for u and x."
     )
 
     # Sidebar controls
@@ -212,13 +212,9 @@ def simulation_page():
         rng = np.random.default_rng()
 
     # Model notes
-        st.subheader("Model notes")
-
+    st.subheader("Model notes")
     st.markdown(
         """
-- This demo uses **Poisson-like spiking probabilities**:  
-  the chance of a neuron firing in each time step depends on its current synaptic efficacy.
-
 ---
 
 ### **Presynaptic spikes**
