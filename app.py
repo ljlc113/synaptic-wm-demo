@@ -28,14 +28,17 @@ if page == "Introduction":
     )
 
     st.header("Sentence we are explaining")
-    st.code(
-        "“We therefore propose that an item is maintained in the WM state by short-term synaptic "
-        "facilitation mediated by increased residual calcium levels at the presynaptic terminals "
-        "of the neurons that code for this item. Because removal of residual calcium from presynaptic "
-        "terminals is a relatively slow process, the memory can be transiently held for about 1 second "
-        "without enhanced spiking activity.”",
-        language="text",
+
+    st.markdown(
+        """
+    > *“We therefore propose that an item is maintained in the WM state by short-term synaptic facilitation
+    mediated by increased residual calcium levels at the presynaptic terminals of the neurons that code
+    for this item. Because removal of residual calcium from presynaptic terminals is a relatively slow
+    process, the memory can be transiently held for about 1 second without enhanced spiking activity.”*
+    """,
+        unsafe_allow_html=False,
     )
+
 
     st.subheader("Plain-language unpacking (step by step)")
     st.markdown(
