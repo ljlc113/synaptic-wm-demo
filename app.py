@@ -217,7 +217,7 @@ def simulation_page():
         """
 ---
 
-### **Presynaptic spikes**
+#### **Presynaptic spikes**
 When a presynaptic neuron fires, the synaptic variables update instantly:
         """
     )
