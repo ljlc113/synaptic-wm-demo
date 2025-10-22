@@ -394,11 +394,28 @@ def simulate_u_x(time, spike_times, U=0.3, tau_D=0.2, tau_F=1.5, dt=0.001):
 def theory_page():
     st.title("Theory: Synaptic Facilitation & Network Architecture")
 
-    # show uploaded schematic image if present
+        # show uploaded schematic image if present, else allow uploader
+    default_img_path = "/mnt/data/b887757b-2a3e-45db-a3d9-b48682245ae8.png"
     try:
-        st.image("/mnt/data/b887757b-2a3e-45db-a3d9-b48682245ae8.png", caption="Fig.1: STP model (left) and network architecture (right)", use_column_width=True)
-    except Exception:
-        st.info("Figure 1 image not found in /mnt/data; replace path or upload the image if you want it displayed.")
+        import os
+        if os.path.exists(default_img_path):
+            st.image(default_img_path,
+                     caption="Fig.1: STP model (left) and network architecture (right)",
+                     use_container_width=True)
+        else:
+            st.warning(f"Figure 1 image not found at {default_img_path}. You can upload it below.")
+            uploaded_file = st.file_uploader("Upload Fig.1 image (PNG/JPG)", type=["png", "jpg", "jpeg"])
+            if uploaded_file is not None:
+                st.image(uploaded_file,
+                         caption="Fig.1: STP model (left) and network architecture (right)",
+                         use_container_width=True)
+    except Exception as e:
+        st.error("Error while loading Fig.1 image: " + str(e))
+        uploaded_file = st.file_uploader("Upload Fig.1 image (PNG/JPG)", type=["png", "jpg", "jpeg"])
+        if uploaded_file is not None:
+            st.image(uploaded_file,
+                     caption="Fig.1: STP model (left) and network architecture (right)",
+                     use_container_width=True)
 
     # Explanatory text
     st.header("Overview")
