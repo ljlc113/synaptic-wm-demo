@@ -454,6 +454,30 @@ The instantaneous connection efficacy is given by:
     axr.axvline(readout_time, color="green", linestyle="--")
     st.pyplot(fig_r)
 
+    st.markdown("---")
+    st.subheader("Understanding population labels")
+
+    st.markdown(
+        """
+**Population 0 (pop 0)** and **Population 1 (pop 1)** refer to the two *selective groups of excitatory neurons* in the simulated network.
+
+- **pop 0** → the **stimulated (memory-encoding)** population.  
+  It receives the selective external input at stimulus onset (`t = 0 s`) to load a memory item into working memory.  
+  You’ll usually see its firing rate rise sharply during the stimulus and again during reactivation or read-out.
+
+- **pop 1** → a **non-stimulated comparison population**.  
+  It represents another group of excitatory neurons coding for a *different* potential memory item but receives **no direct external drive** in this simulation.  
+  Its firing stays near baseline unless background excitation is high enough for cross-activation.
+
+- The **global rate (smoothed)** curve shows the average activity across *all* excitatory neurons (both populations combined).
+
+Together, these traces show how selectively the network maintains the memory item:
+- When facilitation is strong and background input moderate → only **pop 0** reactivates (selective memory).  
+- When background input is high → both populations may fire more continuously (loss of selectivity, asynchronous activity).
+        """
+    )
+
+
     st.markdown("### What to look for")
     st.write(
         "- After the encoding stimulus ends, check whether `u` for the target population remains elevated for ~1 s (activity-silent trace).  \n"
@@ -546,7 +570,7 @@ This page explains the short-term synaptic facilitation model used by Mongillo e
 - `x(t)` = fraction of available vesicles (decreases at spikes, recovers with time constant `τ_D`).
 - `u(t)` = utilization / release probability (jumps at spikes, decays slowly with `τ_F`).
 - `δ(t-t_{sp})` indicates instantaneous jumps at presynaptic spike times.
-- Synaptic efficacy is proportional to `u(t)·x(t)`.
+- Synaptic efficacy is proportional to `u(t)·x(t)`, and it influences the postsynaptic membrane potential.
 """
     )
 
