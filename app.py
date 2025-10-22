@@ -16,7 +16,7 @@ st.set_page_config(layout="wide", page_title="Synaptic Facilitation WM Demo")
 # ----------------------------
 # Introduction page (explanatory)
 # ----------------------------
-if page == "Introduction":
+def introduction_page():
     st.title("Introduction — Synaptic Facilitation & Activity-Silent Working Memory")
     st.markdown(
         "This page explains the core idea from **Mongillo, Barak & Tsodyks (2008)**: "
@@ -162,7 +162,7 @@ process, the memory can be transiently held for about 1 second without enhanced 
 # ----------------------------
 # Simulation page (interactive)
 # ----------------------------
-else:
+def simulation_page():
     st.title("Simulation — Synaptic Facilitation WM (interactive)")
 
     st.write(
