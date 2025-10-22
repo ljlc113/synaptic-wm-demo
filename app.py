@@ -80,15 +80,47 @@ process, the memory can be transiently held for about 1 second without enhanced 
 """
     )
 
-    st.subheader("Conceptual sketch")
+        # --- Conceptual sketch with key + annotations (replace previous sketch block) ---
+    st.subheader("Conceptual sketch (annotated)")
+
+    st.markdown("**Key**")
+    st.markdown(
+        """
+    - `████` : brief high-frequency burst of spikes (encoding event)
+    - `|`    : isolated spike(s)
+    - `/‾‾‾\\` : schematic elevated `u(t)` (residual Ca²⁺ / facilitation)
+    - `\\____/` : schematic dip & recovery of `x(t)` (vesicle depletion & recovery)
+    - `J_eff` : effective synaptic strength (product of `u` and `x`)
+    """
+    )
+
     st.code(
         "time (ms) -> 0       200      400      600      800     1000\n"
-        "spikes      :  ████                              \n"
+        "spikes      :  ████     |                       |           \n"
+        "              [1]      [2]                     [3]          \n"
         "u (Ca)      :   /‾‾‾‾‾‾‾‾‾‾‾‾‾‾\\_______________________\n"
         "x (vesicle) : █‾‾\\_____/\\_____/\\_____/\\__________\n"
-        "J_eff       :   /‾‾‾\\        (primed for readout)\n",
+        "J_eff       :   /‾‾‾\\        (primed for readout)       \n",
         language="text",
     )
+
+    st.markdown("**Annotations (what happens at each numbered event)**")
+    st.markdown(
+        """
+    1. **Encoding (0–~200 ms)** — A strong, brief burst (`████`) of spikes drives the target neurons.
+    - Presynaptic calcium quickly accumulates → `u(t)` jumps up (see the `u` curve rising).
+    - Vesicle resources `x(t)` are consumed (sharp dip).
+    - `J_eff = J_0 * u * x` transiently increases because `u` increases (even if `x` dips).
+    2. **Silent delay (~200–800 ms)** — Spiking drops to baseline or stops.
+    - `u(t)` (residual Ca²⁺) decays slowly and remains **elevated** for a while (activity-silent trace).
+    - `x(t)` recovers back toward 1 with its own time constant.
+    - No persistent firing is needed; the memory is stored in the elevated `u(t)`.
+    3. **Readout / Reactivation (~800–1000 ms)** — A weak nonspecific input or brief cue (`|`) arrives.
+    - Because `u(t)` is still above baseline, the same synapses are **more effective** and the target neurons preferentially reactivate.
+    - This reactivation can refresh `u(t)` and extend maintenance if needed (periodic reactivations).
+    """
+    )
+
 
     # ---------- NEW SECTIONS (tables) ----------
     st.header("Implications & Advantages")
