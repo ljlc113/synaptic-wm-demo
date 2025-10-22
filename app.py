@@ -124,7 +124,13 @@ process, the memory can be transiently held for about 1 second without enhanced 
     draw = ImageDraw.Draw(img)
 
     # compute starting y to vertically center the ascii block
-    line_height = font.getsize("A")[1] + 2
+    try:
+    # modern Pillow (>=8.0)
+        bbox = font.getbbox("A")
+        line_height = bbox[3] - bbox[1] + 2
+    except AttributeError:
+        # older Pillow fallback
+        line_height = font.getsize("A")[1] + 2
     total_text_height = line_height * len(ascii_lines)
     start_y = (fig_height_px - total_text_height) // 2
 
