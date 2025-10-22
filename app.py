@@ -19,16 +19,9 @@ pages = ["Introduction", "Simulation", "Theory"]
 page = st.sidebar.selectbox("Select page", pages)
 
 if page == "Introduction":
-    # if you already have an Introduction function, call it; else we show a placeholder
-    try:
-        introduction_page()   # your existing function (if present)
-    except Exception:
-        st.write("Introduction page placeholder. Replace with your existing content or remove this placeholder.")
+    introduction_page()   # your existing function (if present)
 elif page == "Simulation":
-    try:
-        simulation_page()  # your existing simulation function
-    except Exception:
-        st.write("Simulation page placeholder. Replace with your existing content or remove this placeholder.")
+    simulation_page()  # your existing simulation function
 elif page == "Theory":
     theory_page()
 
